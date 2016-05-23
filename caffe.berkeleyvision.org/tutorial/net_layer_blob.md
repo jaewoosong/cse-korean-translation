@@ -1,11 +1,19 @@
-Blobs, Layers, and Nets: anatomy of a Caffe model
-Deep networks are compositional models that are naturally represented as a collection of inter-connected layers that work on chunks of data. Caffe defines a net layer-by-layer in its own model schema. The network defines the entire model bottom-to-top from input data to loss. As data and derivatives flow through the network in the forward and backward passes Caffe stores, communicates, and manipulates the information as blobs: the blob is the standard array and unified memory interface for the framework. The layer comes next as the foundation of both model and computation. The net follows as the collection and connection of layers. The details of blob describe how information is stored and communicated in and across layers and nets.
+# 블롭 (방울이라는 뜻), 레이어, 신경망: 카페 모델 해부
+(Blobs, Layers, and Nets: anatomy of a Caffe model)
 
-Solving is configured separately to decouple modeling and optimization.
+심층 신경망은 데이터 묶음을 다루는, 서로 연결되어 있는 레이어의 집합으로 표현되는 합성 모델입니다. 카페는 신경망을 레이어 하나하나마다 스스로의 모델 표현 방식으로 정의합니다. 신경망은 전체 모델을 입력값으로부터 loss까지 정의합니다. 데이터와 미분계수가 신경망을 따라서 앞으로 또 뒤로 흘러갈 때 카페는 정보를 블롭 (방울이라는 뜻) 형태를 사용해 저장하고 통신하고 따룹니다. 블롭은 이 프레임워크를 위한 표준 배열이며 통일된 메모리 인터페이스입니다. 모델과 계산을 설계하기 위해 다음으로 필요한 것은 레이어입니다. 신경망은 레이어의 모음, 그리고 레이어와 레이어 간의 연결의 모음입니다. 블롭에 대한 자세한 내용을 통해 정보가 레이어와 신경망에서 어떻게 저장되고 통신되는지 알 수 있습니다.
 
-We will go over the details of these components in more detail.
+(Deep networks are compositional models that are naturally represented as a collection of inter-connected layers that work on chunks of data. Caffe defines a net layer-by-layer in its own model schema. The network defines the entire model bottom-to-top from input data to loss. As data and derivatives flow through the network in the forward and backward passes Caffe stores, communicates, and manipulates the information as blobs: the blob is the standard array and unified memory interface for the framework. The layer comes next as the foundation of both model and computation. The net follows as the collection and connection of layers. The details of blob describe how information is stored and communicated in and across layers and nets.)
 
-Blob storage and communication
+문제를 푸는 방법(solving)은 모델링과 최적화를 분리하기 위해 따로 설정됩니다.
+(Solving is configured separately to decouple modeling and optimization.)
+
+이 각각의 요소를 더 자세히 설명하도록 하겠습니다.
+(We will go over the details of these components in more detail.)
+
+## 블롭 저장과 통신
+(Blob storage and communication)
+
 A Blob is a wrapper over the actual data being processed and passed along by Caffe, and also under the hood provides synchronization capability between the CPU and the GPU. Mathematically, a blob is an N-dimensional array stored in a C-contiguous fashion.
 
 Caffe stores and communicates data using blobs. Blobs provide a unified memory interface holding data; e.g., batches of images, model parameters, and derivatives for optimization.
