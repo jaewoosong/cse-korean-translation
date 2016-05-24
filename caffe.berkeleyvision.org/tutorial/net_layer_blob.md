@@ -125,7 +125,7 @@
 신경망은 계산 그래프, 정확히는 방향성 비순환 그래프(DAG: Directed Acyclic Graph) 안에서 연결된 레이어의 집합입니다. 카페는 방향성 비순환 그래프의 레이어가 필요로 하는 모든 정보를 자동으로 기록해서 전진과 후진이 제대로 이루어졌는지를 확인합니다. 일반적인 신경망은 디스크에서 자료를 불러오는 데이터 레이어로 시작하여 분류(classification) 혹은 복원(reconstruction) 등과 같은 작업의 목표를 계산하는 손실 레이어로 끝납니다.
 (The net is a set of layers connected in a computation graph – a directed acyclic graph (DAG) to be exact. Caffe does all the bookkeeping for any DAG of layers to ensure correctness of the forward and backward passes. A typical net begins with a data layer that loads from disk and ends with a loss layer that computes the objective for a task such as classification or reconstruction.)
 
-신경망은 평범한 문자열로 된 모델링 언어로 작성된 여러 레이어와 그들간의 연결의 집합으로 정의됩니다. 단순한 로지스틱 회귀 분류는
+신경망은 평범한 문자열로 된 모델링 언어로 작성된 여러 레이어와 그들간의 연결의 집합으로 정의됩니다. 단순한 로지스틱 회귀 분류기는
 (The net is defined as a set of layers and their connections in a plaintext modeling language. A simple logistic regression classifier)
 
 <img src="fig/logreg.jpg" alt="Softmax Regression" width="256" />
