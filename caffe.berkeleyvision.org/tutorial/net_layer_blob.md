@@ -114,7 +114,7 @@
 레이어는 신경망 전체에 대한 두 가지 중요한 책임을 지고 있는데, 입력을 받아서 출력을 내어 놓는 전진과 출력에 대한 기울기를 전달하는 후진, 그리고 전 단계에 있는 레이어로 역방향 전달되는 (back-propagated) 인자와 입력에 대한 기울기 계산이 그것입니다. 이 작업들은 단순히 각 레이어의 전진과 후진의 합성입니다.
 (Layers have two key responsibilities for the operation of the network as a whole: a forward pass that takes the inputs and produces the outputs, and a backward pass that takes the gradient with respect to the output, and computes the gradients with respect to the parameters and to the inputs, which are in turn back-propagated to earlier layers. These passes are simply the composition of each layer’s forward and backward.)
 
-신경망의 합성 성질과 코드의 단위성(modularity) 때문에 개인이 레이어를 만드는 경우 최소한의 노력만 들이면 됩니다. 설정, 그리고 레이어의 전진과 후진만 정의하면 신경망에 포함될 준비가 다 끝납니다.
+신경망의 합성 성질과 코드의 단위성(modularity) 덕분에 개인이 레이어를 만드는 경우 최소한의 노력만 들이면 됩니다. 설정, 그리고 레이어의 전진과 후진만 정의하면 신경망에 포함될 준비가 다 끝납니다.
 (Developing custom layers requires minimal effort by the compositionality of the network and modularity of the code. Define the setup, forward, and backward for the layer and it is ready for inclusion in a net.)
 
 ## 신경망의 정의와 연산 (Net definition and operation)
