@@ -1,16 +1,20 @@
-# Forward and Backward
+# 전진과 후진 (Forward and Backward)
 
-The forward and backward passes are the essential computations of a Net.
+전진과 후진은 신경망 계산의 필수 요소입니다.
+(The forward and backward passes are the essential computations of a Net.)
 
 <img src="fig/forward_backward.png" alt="Forward and Backward" width="480" />
 
-Let’s consider a simple logistic regression classifier.
+단순한 로지스틱 회귀 분류기를 생각해 보겠습니다.
+(Let’s consider a simple logistic regression classifier.)
 
-The forward pass computes the output given the input for inference. In forward Caffe composes the computation of each layer to computee the "function" represented by the model. This pass goes from bottom to top.
+전진 과정(forward pass)은 예측에 필요한 입력이 주어졌을 때에 출력을 계산합입니다. 전진 과정에서 카페는 모델이 표현하는 "함수(function)"를 계산하기 위해 각 레이어의 계산을 합성합니다. 이 과정은 아래에서 위로 갑니다.
+(The forward pass computes the output given the input for inference. In forward Caffe composes the computation of each layer to compute the "function" represented by the model. This pass goes from bottom to top.)
 
 <img src="fig/forward.jpg" alt="Forward pass" width="320" />
 
-The data xx is passed through an inner product layer for g(x)g(x) then through a softmax for h(g(x))h(g(x)) and softmax loss to give fW(x)fW(x).
+데이터 x가 g(x)를 위해 벡터 내적 레이어를 통과하고 이어 h(g(x))를 위해 소프트맥스
+(The data x is passed through an inner product layer for g(x) then through a softmax for h(g(x))h(g(x)) and softmax loss to give fW(x)fW(x).
 
 The backward pass computes the gradient given the loss for learning. In backward Caffe reverse-composes the gradient of each layer to compute the gradient of the whole model by automatic differentiation. This is back-propagation. This pass goes from top to bottom.
 
