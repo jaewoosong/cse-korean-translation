@@ -8,7 +8,7 @@
 단순한 로지스틱 회귀 분류기를 생각해 보겠습니다.
 (Let’s consider a simple logistic regression classifier.)
 
-전진 과정(forward pass)은 예측에 필요한 입력이 주어졌을 때에 출력을 계산합입니다. 전진 과정에서 카페는 모델이 표현하는 "함수(function)"를 계산하기 위해 각 레이어의 계산을 합성합니다. 이 과정은 아래에서 위로 갑니다.
+전진 과정(forward pass)은 예측에 필요한 입력이 주어졌을 때에 출력을 계산합니다. 전진 과정에서 카페는 모델이 표현하는 "함수(function)"를 계산하기 위해 각 레이어의 계산을 합성합니다. 이 과정은 아래에서 위로 갑니다.
 (The forward pass computes the output given the input for inference. In forward Caffe composes the computation of each layer to compute the "function" represented by the model. This pass goes from bottom to top.)
 
 <img src="fig/forward.jpg" alt="Forward pass" width="320" />
