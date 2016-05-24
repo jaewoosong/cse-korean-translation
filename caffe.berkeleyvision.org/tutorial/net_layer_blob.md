@@ -1,6 +1,6 @@
 # 블롭, 레이어, 신경망: 카페 모델 해부 (Blobs, Layers, and Nets: anatomy of a Caffe model)
 
-심층 신경망은 데이터 묶음을 다루는, 서로 연결되어 있는 레이어의 집합으로 표현되는 합성 모델입니다. 카페는 신경망을 레이어 하나하나마다 스스로의 모델 표현 방식으로 정의합니다. 신경망은 전체 모델을 입력값으로부터 loss까지 정의합니다. 데이터와 미분계수가 신경망을 따라서 앞으로 또 뒤로 흘러갈 때 카페는 정보를 블롭 (방울이라는 뜻) 형태를 사용해 저장하고 통신하고 따룹니다. 블롭은 이 프레임워크를 위한 표준 배열이며 통일된 메모리 인터페이스입니다. 모델과 계산을 설계하기 위해 다음으로 필요한 것은 레이어입니다. 신경망은 레이어의 모음, 그리고 레이어와 레이어 간의 연결의 모음입니다. 블롭에 대한 자세한 내용을 통해 정보가 레이어와 신경망에서 어떻게 저장되고 통신되는지 알 수 있습니다.
+심층 신경망은 데이터 묶음을 다루는, 서로 연결되어 있는 레이어의 집합으로 표현되는 합성 모델입니다. 카페는 신경망을 레이어 하나하나마다 스스로의 모델 표현 방식으로 정의합니다. 신경망은 전체 모델을 입력값으로부터 손실(loss)까지 정의합니다. 데이터와 미분계수가 신경망을 따라서 앞으로 또 뒤로 흘러갈 때 카페는 정보를 블롭 (방울이라는 뜻) 형태를 사용해 저장하고 통신하고 따룹니다. 블롭은 이 프레임워크를 위한 표준 배열이며 통일된 메모리 인터페이스입니다. 모델과 계산을 설계하기 위해 다음으로 필요한 것은 레이어입니다. 신경망은 레이어의 모음, 그리고 레이어와 레이어 간의 연결의 모음입니다. 블롭에 대한 자세한 내용을 통해 정보가 레이어와 신경망에서 어떻게 저장되고 통신되는지 알 수 있습니다.
 (Deep networks are compositional models that are naturally represented as a collection of inter-connected layers that work on chunks of data. Caffe defines a net layer-by-layer in its own model schema. The network defines the entire model bottom-to-top from input data to loss. As data and derivatives flow through the network in the forward and backward passes Caffe stores, communicates, and manipulates the information as _blobs_: the blob is the standard array and unified memory interface for the framework. The layer comes next as the foundation of both model and computation. The net follows as the collection and connection of layers. The details of blob describe how information is stored and communicated in and across layers and nets.)
 
 문제를 푸는 방법(solving)은 모델링과 최적화를 분리하기 위해 따로 설정됩니다.
@@ -87,37 +87,47 @@
     bar = blob.mutable_cpu_data(); // data copied gpu->cpu.
 
 ## 레이어 계산과 연결 (Layer computation and connections)
-The layer is the essence of a model and the fundamental unit of computation. Layers convolve filters, pool, take inner products, apply nonlinearities like rectified-linear and sigmoid and other elementwise transformations, normalize, load data, and compute losses like softmax and hinge. See the layer catalogue for all operations. Most of the types needed for state-of-the-art deep learning tasks are there.
 
-A layer with bottom and top blob.
+레이어는 모델의 핵심이고 계산의 필수 단위입니다. 레이어는 필터, 모으기(pool), 벡터 내적, 정류 선형(rectified-linear)이나 시그모이드 혹은 각각에 요소에 적용되는 다른 변환, 표준화(normalize), 데이터 불러오기 및 소프트맥스와 힌지(hinge) 손실 계산에 사용됩니다. 레이어 목록에 모든 작업이 설명되어 있습니다. 최신 심층 학습(deep learning)에 필요한 대부분의 작업이 포함되어 있습니다. 
+(The layer is the essence of a model and the fundamental unit of computation. Layers convolve filters, pool, take inner products, apply nonlinearities like rectified-linear and sigmoid and other elementwise transformations, normalize, load data, and compute losses like softmax and hinge. See the layer catalogue for all operations. Most of the types needed for state-of-the-art deep learning tasks are there.)
 
 <img src="fig/layer.jpg" alt="A layer with bottom and top blob." width="256" />
 
-A layer takes input through bottom connections and makes output through top connections.
+레이어가 아래 연결에서 입력을 받아서 위 연결로 출력을 합니다.
+(A layer takes input through bottom connections and makes output through top connections.)
 
-Each layer type defines three critical computations: setup, forward, and backward.
+각각의 레이어 종류는 설정(setup), 전진(forward), 후진(backward), 세 가지 필수적인 연산을 정의합니다.
+(Each layer type defines three critical computations: setup, forward, and backward.)
 
-Setup: initialize the layer and its connections once at model initialization.
-Forward: given input from bottom compute the output and send to the top.
-Backward: given the gradient w.r.t. the top output compute the gradient w.r.t. to the input and send to the bottom. A layer with parameters computes the gradient w.r.t. to its parameters and stores it internally.
-More specifically, there will be two Forward and Backward functions implemented, one for CPU and one for GPU. If you do not implement a GPU version, the layer will fall back to the CPU functions as a backup option. This may come handy if you would like to do quick experiments, although it may come with additional data transfer cost (its inputs will be copied from GPU to CPU, and its outputs will be copied back from CPU to GPU).
+* 설정: 모델 초기화 시 한 번 레이어와 그에 따른 연결을 초기화합니다.
+(Setup: initialize the layer and its connections once at model initialization.)
 
-Layers have two key responsibilities for the operation of the network as a whole: a forward pass that takes the inputs and produces the outputs, and a backward pass that takes the gradient with respect to the output, and computes the gradients with respect to the parameters and to the inputs, which are in turn back-propagated to earlier layers. These passes are simply the composition of each layer’s forward and backward.
+* 전진: 아래에서 입력을 받아서 계산 결과를 위로 출력합니다.
+(Forward: given input from bottom compute the output and send to the top.)
 
-Developing custom layers requires minimal effort by the compositionality of the network and modularity of the code. Define the setup, forward, and backward for the layer and it is ready for inclusion in a net.
+* 후진: 위의 출력에 대한 기울기가 주어졌을 때에 입력에 대한 기울기를 계산해서 밑으로 보냅니다. 인자(parameter)가 있는 레이어는 각 인자에 대한 기울기를 계산해서 내부에 저장해 놓습니다.
+(Backward: given the gradient w.r.t. the top output compute the gradient w.r.t. to the input and send to the bottom. A layer with parameters computes the gradient w.r.t. to its parameters and stores it internally.)
 
-## Net definition and operation
-The net jointly defines a function and its gradient by composition and auto-differentiation. The composition of every layer’s output computes the function to do a given task, and the composition of every layer’s backward computes the gradient from the loss to learn the task. Caffe models are end-to-end machine learning engines.
+더 자세히 말하자면, CPU와 GPU를 위해 전진과 후진 함수가 각각 두 개씩 구현됩니다. 만약 당신이 GPU용 함수를 구현하지 않으면 레이어는 예비용으로 CPU용 함수를 사용합니다. 이렇게 하면 빨리 실험을 해 볼 때에는 편리하겠지만 데이터 전송에 추가 자원이 필요하게 됩니다. (입력 값이 GPU에서 CPU로 복사되고, 출력 값이 다시 CPU에서 GPU로 복사됩니다.)
+(More specifically, there will be two Forward and Backward functions implemented, one for CPU and one for GPU. If you do not implement a GPU version, the layer will fall back to the CPU functions as a backup option. This may come handy if you would like to do quick experiments, although it may come with additional data transfer cost (its inputs will be copied from GPU to CPU, and its outputs will be copied back from CPU to GPU).)
 
-The net is a set of layers connected in a computation graph – a directed acyclic graph (DAG) to be exact. Caffe does all the bookkeeping for any DAG of layers to ensure correctness of the forward and backward passes. A typical net begins with a data layer that loads from disk and ends with a loss layer that computes the objective for a task such as classification or reconstruction.
+레이어는 신경망 전체에 대한 두 가지 중요한 책임을 지고 있는데, 입력을 받아서 출력을 내어 놓는 전진과 출력에 대한 기울기를 전달하는 후진, 그리고 전 단계에 있는 레이어로 역방향 전달되는 (back-propagated) 인자와 입력에 대한 기울기 계산이 그것입니다. 이 작업들은 단순히 각 레이어의 전진과 후진의 합성입니다.
+(Layers have two key responsibilities for the operation of the network as a whole: a forward pass that takes the inputs and produces the outputs, and a backward pass that takes the gradient with respect to the output, and computes the gradients with respect to the parameters and to the inputs, which are in turn back-propagated to earlier layers. These passes are simply the composition of each layer’s forward and backward.)
 
-The net is defined as a set of layers and their connections in a plaintext modeling language. A simple logistic regression classifier
+신경망의 합성 성질과 코드의 단위성(modularity) 때문에 개인이 레이어를 만드는 경우 최소한의 노력만 들이면 됩니다. 설정, 그리고 레이어의 전진과 후진만 정의하면 신경망에 포함될 준비가 다 끝납니다.
+(Developing custom layers requires minimal effort by the compositionality of the network and modularity of the code. Define the setup, forward, and backward for the layer and it is ready for inclusion in a net.)
 
-Softmax Regression
+## 신경망의 정의와 연산 (Net definition and operation)
+
+(The net jointly defines a function and its gradient by composition and auto-differentiation. The composition of every layer’s output computes the function to do a given task, and the composition of every layer’s backward computes the gradient from the loss to learn the task. Caffe models are end-to-end machine learning engines.)
+
+(The net is a set of layers connected in a computation graph – a directed acyclic graph (DAG) to be exact. Caffe does all the bookkeeping for any DAG of layers to ensure correctness of the forward and backward passes. A typical net begins with a data layer that loads from disk and ends with a loss layer that computes the objective for a task such as classification or reconstruction.)
+
+(The net is defined as a set of layers and their connections in a plaintext modeling language. A simple logistic regression classifier)
 
 <img src="fig/logreg.jpg" alt="Softmax Regression" width="256" />
 
-is defined by
+(is defined by)
 
     name: "LogReg"
     layer {
@@ -147,7 +157,7 @@ is defined by
       top: "loss"
     }
 
-Model initialization is handled by `Net::Init()`. The initialization mainly does two things: scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime), and calls the layers’ `SetUp()` function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. Also, during initialization the Net explains its initialization by logging to INFO as it goes:
+(Model initialization is handled by `Net::Init()`. The initialization mainly does two things: scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime), and calls the layers’ `SetUp()` function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. Also, during initialization the Net explains its initialization by logging to INFO as it goes:)
 
     I0902 22:52:17.931977 2079114000 net.cpp:39] Initializing net from parameters:
     name: "LogReg"
@@ -184,12 +194,12 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
     I0902 22:52:17.941818 2079114000 net.cpp:219] Network initialization done.
     I0902 22:52:17.941824 2079114000 net.cpp:220] Memory required for data: 201476
 
-Note that the construction of the network is device agnostic - recall our earlier explanation that blobs and layers hide implementation details from the model definition. After construction, the network is run on either CPU or GPU by setting a single switch defined in `Caffe::mode()` and set by `Caffe::set_mode()`. Layers come with corresponding CPU and GPU routines that produce identical results (up to numerical errors, and with tests to guard it). The CPU / GPU switch is seamless and independent of the model definition. For research and deployment alike it is best to divide model and implementation.
+(Note that the construction of the network is device agnostic - recall our earlier explanation that blobs and layers hide implementation details from the model definition. After construction, the network is run on either CPU or GPU by setting a single switch defined in `Caffe::mode()` and set by `Caffe::set_mode()`. Layers come with corresponding CPU and GPU routines that produce identical results (up to numerical errors, and with tests to guard it). The CPU / GPU switch is seamless and independent of the model definition. For research and deployment alike it is best to divide model and implementation.)
 
-### Model format
+### 모델 형식 (Model format)
 
-The models are defined in plaintext protocol buffer schema (prototxt) while the learned models are serialized as binary protocol buffer (binaryproto) .caffemodel files.
+(The models are defined in plaintext protocol buffer schema (prototxt) while the learned models are serialized as binary protocol buffer (binaryproto) .caffemodel files.)
 
-The model format is defined by the protobuf schema in caffe.proto. The source file is mostly self-explanatory so one is encouraged to check it out.
+(The model format is defined by the protobuf schema in caffe.proto. The source file is mostly self-explanatory so one is encouraged to check it out.)
 
-Caffe speaks Google Protocol Buffer for the following strengths: minimal-size binary strings when serialized, efficient serialization, a human-readable text format compatible with the binary version, and efficient interface implementations in multiple languages, most notably C++ and Python. This all contributes to the flexibility and extensibility of modeling in Caffe.
+(Caffe speaks Google Protocol Buffer for the following strengths: minimal-size binary strings when serialized, efficient serialization, a human-readable text format compatible with the binary version, and efficient interface implementations in multiple languages, most notably C++ and Python. This all contributes to the flexibility and extensibility of modeling in Caffe.)
