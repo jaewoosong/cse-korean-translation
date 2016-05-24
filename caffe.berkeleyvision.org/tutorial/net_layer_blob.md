@@ -1,8 +1,6 @@
-# 블롭 (방울이라는 뜻), 레이어, 신경망: 카페 모델 해부
-(Blobs, Layers, and Nets: anatomy of a Caffe model)
+# 블롭 (방울이라는 뜻), 레이어, 신경망: 카페 모델 해부 (Blobs, Layers, and Nets: anatomy of a Caffe model)
 
 심층 신경망은 데이터 묶음을 다루는, 서로 연결되어 있는 레이어의 집합으로 표현되는 합성 모델입니다. 카페는 신경망을 레이어 하나하나마다 스스로의 모델 표현 방식으로 정의합니다. 신경망은 전체 모델을 입력값으로부터 loss까지 정의합니다. 데이터와 미분계수가 신경망을 따라서 앞으로 또 뒤로 흘러갈 때 카페는 정보를 블롭 (방울이라는 뜻) 형태를 사용해 저장하고 통신하고 따룹니다. 블롭은 이 프레임워크를 위한 표준 배열이며 통일된 메모리 인터페이스입니다. 모델과 계산을 설계하기 위해 다음으로 필요한 것은 레이어입니다. 신경망은 레이어의 모음, 그리고 레이어와 레이어 간의 연결의 모음입니다. 블롭에 대한 자세한 내용을 통해 정보가 레이어와 신경망에서 어떻게 저장되고 통신되는지 알 수 있습니다.
-
 (Deep networks are compositional models that are naturally represented as a collection of inter-connected layers that work on chunks of data. Caffe defines a net layer-by-layer in its own model schema. The network defines the entire model bottom-to-top from input data to loss. As data and derivatives flow through the network in the forward and backward passes Caffe stores, communicates, and manipulates the information as blobs: the blob is the standard array and unified memory interface for the framework. The layer comes next as the foundation of both model and computation. The net follows as the collection and connection of layers. The details of blob describe how information is stored and communicated in and across layers and nets.)
 
 문제를 푸는 방법(solving)은 모델링과 최적화를 분리하기 위해 따로 설정됩니다.
@@ -11,26 +9,33 @@
 이 각각의 요소를 더 자세히 설명하도록 하겠습니다.
 (We will go over the details of these components in more detail.)
 
-## 블롭 저장과 통신
-(Blob storage and communication)
+## 블롭 저장과 통신 (Blob storage and communication)
 
-A Blob is a wrapper over the actual data being processed and passed along by Caffe, and also under the hood provides synchronization capability between the CPU and the GPU. Mathematically, a blob is an N-dimensional array stored in a C-contiguous fashion.
+블롭은 카페가 가공하고 전달하는 실제 데이터에 대한 포장이고, 내부적으로는 CPU와 GPU간의 동기화 기능을 지원합니다. 수학적으로 보면 블롭은 C의 메모리 형식으로 저장된 N차원의 배열입니다.
+(A Blob is a wrapper over the actual data being processed and passed along by Caffe, and also under the hood provides synchronization capability between the CPU and the GPU. Mathematically, a blob is an N-dimensional array stored in a C-contiguous fashion.)
 
-Caffe stores and communicates data using blobs. Blobs provide a unified memory interface holding data; e.g., batches of images, model parameters, and derivatives for optimization.
+카페는 블롭을 사용해서 데이터를 저장하고 통신합니다. 블롭은 데이터 저장에 대한 통일된 메모리 인터페이스를 제공합니다. 사진 묶음, 모델 인자, 최적화를 위한 미분계수 등이 그 예입니다.
+(Caffe stores and communicates data using blobs. Blobs provide a unified memory interface holding data; e.g., batches of images, model parameters, and derivatives for optimization.)
 
-Blobs conceal the computational and mental overhead of mixed CPU/GPU operation by synchronizing from the CPU host to the GPU device as needed. Memory on the host and device is allocated on demand (lazily) for efficient memory usage.
+블롭은 CPU/GPU 혼합 작업에 대한 계산 과부하와 정신력 과부하를 필요에 따라 CPU 호스트를 기준으로 GPU 기기들을 동기화함으로써 감춥니다. 호스트와 기기의 메모리는 효율적인 메모리 사용을 위해 필요에 따라 (느긋하게) 배정됩니다.
+(Blobs conceal the computational and mental overhead of mixed CPU/GPU operation by synchronizing from the CPU host to the GPU device as needed. Memory on the host and device is allocated on demand (lazily) for efficient memory usage.)
 
-The conventional blob dimensions for batches of image data are number N x channel K x height H x width W. Blob memory is row-major in layout, so the last / rightmost dimension changes fastest. For example, in a 4D blob, the value at index (n, k, h, w) is physically located at index ((n * K + k) * H + h) * W + w.
+이미지 데이터 일괄 작업(batch)을 위한 일반적인 블롭의 차원은 개수 N x 채널 K x 높이 H x 넓이 W입니다. 블롭의 메모리는 행(row) 기준으로 배치되어 있어서 마지막과 가장 오른쪽 차원의 변경이 쉽습니다. 예를 들어 4차원 블롭에서 인덱스 (n, k, h, w)의 값은 물리적으로 인덱스 ((n * K + k) * H + h) * W + w)에 존재합니다.
+(The conventional blob dimensions for batches of image data are number N x channel K x height H x width W. Blob memory is row-major in layout, so the last / rightmost dimension changes fastest. For example, in a 4D blob, the value at index (n, k, h, w) is physically located at index ((n * K + k) * H + h) * W + w.)
 
-Number / N is the batch size of the data. Batch processing achieves better throughput for communication and device processing. For an ImageNet training batch of 256 images N = 256.
-Channel / K is the feature dimension e.g. for RGB images K = 3.
+* 숫자 N은 데이터의 일괄 묶음 크기입니다. 일괄 처리를 통해 통신과 장비 사용의 처리량이 늘어납니다. 256장의 사진을 일괄 처리하는 이미지넷(ImageNet) 학습의 경우 N = 256 입니다.
+(Number / N is the batch size of the data. Batch processing achieves better throughput for communication and device processing. For an ImageNet training batch of 256 images N = 256.)
+
+* 채널 K는 특징(feature)의 차원입니다. 예를 들어 RGB 사진의 경우 K = 3 입니다.
+(Channel / K is the feature dimension e.g. for RGB images K = 3.)
+ 
 Note that although many blobs in Caffe examples are 4D with axes for image applications, it is totally valid to use blobs for non-image applications. For example, if you simply need fully-connected networks like the conventional multi-layer perceptron, use 2D blobs (shape (N, D)) and call the InnerProductLayer (which we will cover soon).
 
 Parameter blob dimensions vary according to the type and configuration of the layer. For a convolution layer with 96 filters of 11 x 11 spatial dimension and 3 inputs the blob is 96 x 3 x 11 x 11. For an inner product / fully-connected layer with 1000 output channels and 1024 input channels the parameter blob is 1000 x 1024.
 
 For custom data it may be necessary to hack your own input preparation tool or data layer. However once your data is in your job is done. The modularity of layers accomplishes the rest of the work for you.
 
-Implementation Details
+### 구현 상세 내용 (Implementation Details)
 
 As we are often interested in the values as well as the gradients of the blob, a Blob stores two chunks of memories, data and diff. The former is the normal data that we pass along, and the latter is the gradient computed by the network.
 
@@ -59,7 +64,8 @@ foo = blob.gpu_data(); // no data copied since both have up-to-date contents
 bar = blob.mutable_cpu_data(); // still no data copied.
 bar = blob.mutable_gpu_data(); // data copied cpu->gpu.
 bar = blob.mutable_cpu_data(); // data copied gpu->cpu.
-Layer computation and connections
+
+## Layer computation and connections
 The layer is the essence of a model and the fundamental unit of computation. Layers convolve filters, pool, take inner products, apply nonlinearities like rectified-linear and sigmoid and other elementwise transformations, normalize, load data, and compute losses like softmax and hinge. See the layer catalogue for all operations. Most of the types needed for state-of-the-art deep learning tasks are there.
 
 A layer with bottom and top blob.
@@ -77,7 +83,7 @@ Layers have two key responsibilities for the operation of the network as a whole
 
 Developing custom layers requires minimal effort by the compositionality of the network and modularity of the code. Define the setup, forward, and backward for the layer and it is ready for inclusion in a net.
 
-Net definition and operation
+## Net definition and operation
 The net jointly defines a function and its gradient by composition and auto-differentiation. The composition of every layer’s output computes the function to do a given task, and the composition of every layer’s backward computes the gradient from the loss to learn the task. Caffe models are end-to-end machine learning engines.
 
 The net is a set of layers connected in a computation graph – a directed acyclic graph (DAG) to be exact. Caffe does all the bookkeeping for any DAG of layers to ensure correctness of the forward and backward passes. A typical net begins with a data layer that loads from disk and ends with a loss layer that computes the objective for a task such as classification or reconstruction.
@@ -120,7 +126,7 @@ Model initialization is handled by Net::Init(). The initialization mainly does t
 I0902 22:52:17.931977 2079114000 net.cpp:39] Initializing net from parameters:
 name: "LogReg"
 [...model prototxt printout...]
-# construct the network layer-by-layer
+\# construct the network layer-by-layer
 I0902 22:52:17.932152 2079114000 net.cpp:67] Creating Layer mnist
 I0902 22:52:17.932165 2079114000 net.cpp:356] mnist -> data
 I0902 22:52:17.932188 2079114000 net.cpp:356] mnist -> label
@@ -138,22 +144,22 @@ I0902 22:52:17.941270 2079114000 net.cpp:67] Creating Layer loss
 I0902 22:52:17.941305 2079114000 net.cpp:394] loss <- ip
 I0902 22:52:17.941314 2079114000 net.cpp:394] loss <- label
 I0902 22:52:17.941323 2079114000 net.cpp:356] loss -> loss
-# set up the loss and configure the backward pass
+\# set up the loss and configure the backward pass
 I0902 22:52:17.941328 2079114000 net.cpp:96] Setting up loss
 I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: (1)
 I0902 22:52:17.941329 2079114000 net.cpp:109]     with loss weight 1
 I0902 22:52:17.941779 2079114000 net.cpp:170] loss needs backward computation.
 I0902 22:52:17.941787 2079114000 net.cpp:170] ip needs backward computation.
 I0902 22:52:17.941794 2079114000 net.cpp:172] mnist does not need backward computation.
-# determine outputs
+\# determine outputs
 I0902 22:52:17.941800 2079114000 net.cpp:208] This network produces output loss
-# finish initialization and report memory usage
+\# finish initialization and report memory usage
 I0902 22:52:17.941810 2079114000 net.cpp:467] Collecting Learning Rate and Weight Decay.
 I0902 22:52:17.941818 2079114000 net.cpp:219] Network initialization done.
 I0902 22:52:17.941824 2079114000 net.cpp:220] Memory required for data: 201476
 Note that the construction of the network is device agnostic - recall our earlier explanation that blobs and layers hide implementation details from the model definition. After construction, the network is run on either CPU or GPU by setting a single switch defined in Caffe::mode() and set by Caffe::set_mode(). Layers come with corresponding CPU and GPU routines that produce identical results (up to numerical errors, and with tests to guard it). The CPU / GPU switch is seamless and independent of the model definition. For research and deployment alike it is best to divide model and implementation.
 
-Model format
+### Model format
 
 The models are defined in plaintext protocol buffer schema (prototxt) while the learned models are serialized as binary protocol buffer (binaryproto) .caffemodel files.
 
