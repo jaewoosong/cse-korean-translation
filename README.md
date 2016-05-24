@@ -1,7 +1,9 @@
-# 한국어로 번역하자
-각종 컴퓨터 과학, 공학 문서를 한국어로 번역하고 있습니다.
+# 한국어로 번역하자 (Let's translate into Korean)
 
-## 현재 번역중인 문서
+각종 컴퓨터 과학, 공학 문서를 한국어로 번역하고 있습니다.
+(I translate various computer science and engineering documents into Korean.)
+
+## 현재 번역중인 문서 (Currently translating)
 
 ### Caffe
 * http://caffe.berkeleyvision.org/
@@ -11,3 +13,5 @@
   Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
   Year = {2014}
 }
+
+## 자유롭게 사용하시되 출처를 명시해주시고 아파치 라이센스 2.0을 따라주세요. (Feel free to use; just mention the source and follow Apache license 2.0)
