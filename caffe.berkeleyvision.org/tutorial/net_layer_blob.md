@@ -1,7 +1,7 @@
 # 블롭, 레이어, 신경망: 카페 모델 해부 (Blobs, Layers, and Nets: anatomy of a Caffe model)
 
 심층 신경망은 데이터 묶음을 다루는, 서로 연결되어 있는 레이어의 집합으로 표현되는 합성 모델입니다. 카페는 신경망을 레이어 하나하나마다 스스로의 모델 표현 방식으로 정의합니다. 신경망은 전체 모델을 입력값으로부터 loss까지 정의합니다. 데이터와 미분계수가 신경망을 따라서 앞으로 또 뒤로 흘러갈 때 카페는 정보를 블롭 (방울이라는 뜻) 형태를 사용해 저장하고 통신하고 따룹니다. 블롭은 이 프레임워크를 위한 표준 배열이며 통일된 메모리 인터페이스입니다. 모델과 계산을 설계하기 위해 다음으로 필요한 것은 레이어입니다. 신경망은 레이어의 모음, 그리고 레이어와 레이어 간의 연결의 모음입니다. 블롭에 대한 자세한 내용을 통해 정보가 레이어와 신경망에서 어떻게 저장되고 통신되는지 알 수 있습니다.
-(Deep networks are compositional models that are naturally represented as a collection of inter-connected layers that work on chunks of data. Caffe defines a net layer-by-layer in its own model schema. The network defines the entire model bottom-to-top from input data to loss. As data and derivatives flow through the network in the forward and backward passes Caffe stores, communicates, and manipulates the information as blobs: the blob is the standard array and unified memory interface for the framework. The layer comes next as the foundation of both model and computation. The net follows as the collection and connection of layers. The details of blob describe how information is stored and communicated in and across layers and nets.)
+(Deep networks are compositional models that are naturally represented as a collection of inter-connected layers that work on chunks of data. Caffe defines a net layer-by-layer in its own model schema. The network defines the entire model bottom-to-top from input data to loss. As data and derivatives flow through the network in the forward and backward passes Caffe stores, communicates, and manipulates the information as _blobs_: the blob is the standard array and unified memory interface for the framework. The layer comes next as the foundation of both model and computation. The net follows as the collection and connection of layers. The details of blob describe how information is stored and communicated in and across layers and nets.)
 
 문제를 푸는 방법(solving)은 모델링과 최적화를 분리하기 위해 따로 설정됩니다.
 (Solving is configured separately to decouple modeling and optimization.)
@@ -52,27 +52,41 @@
 (GPU와 벡터 기울기에 대해서도 비슷합니다.)
 ((similarly for gpu and diff).)
 
-The reason for such design is that, a Blob uses a SyncedMem class to synchronize values between the CPU and GPU in order to hide the synchronization details and to minimize data transfer. A rule of thumb is, always use the const call if you do not want to change the values, and never store the pointers in your own object. Every time you work on a blob, call the functions to get the pointers, as the SyncedMem will need this to figure out when to copy data.
+디자인을 이렇게 한 것은 동기와의 세부 내용을 감추고 데이터 교환을 최소화하기 위해 CPU와 GPU의 값을 동기화할 때에 블롭이 SyncedMem 클래스를 사용하기 때문입니다. 가장 우선되는 원칙은 값을 바꾸고 싶지 않을 경우에는 상수형 호출(const call)을 하며 절대로 여러분이 만든 객체에 포인터를 저장하지 말라는 것입니다. SyncedMem에게 언제 데이터를 복사할지 알려주기 위해서, 블롭 작업을 하면서 포인터를 써야 할 때에는 항상 함수를 사용해야 합니다.
+(The reason for such design is that, a Blob uses a SyncedMem class to synchronize values between the CPU and GPU in order to hide the synchronization details and to minimize data transfer. A rule of thumb is, always use the const call if you do not want to change the values, and never store the pointers in your own object. Every time you work on a blob, call the functions to get the pointers, as the SyncedMem will need this to figure out when to copy data.)
 
-In practice when GPUs are present, one loads data from the disk to a blob in CPU code, calls a device kernel to do GPU computation, and ferries the blob off to the next layer, ignoring low-level details while maintaining a high level of performance. As long as all layers have GPU implementations, all the intermediate data and gradients will remain in the GPU.
+실제 사용 환경에서 GPU가 있을 경우 데이터를 디스크에서 CPU 코드용 블롭으로 불러오고, 장비 커널(device kernel)을 호출해서 GPU 연산을 하고, 블롭을 다음 레이어로 보내고, 세부적인 내용은 신경쓰지 않은 채 고수준의 성능을 유지할 수 있습니다. 모든 레이어가 GPU를 구현해 놓았다면 모든 중간 단계 데이터와 벡터 기울기는 GPU 안에 머무르게 됩니다.
+(In practice when GPUs are present, one loads data from the disk to a blob in CPU code, calls a device kernel to do GPU computation, and ferries the blob off to the next layer, ignoring low-level details while maintaining a high level of performance. As long as all layers have GPU implementations, all the intermediate data and gradients will remain in the GPU.)
 
-If you want to check out when a Blob will copy data, here is an illustrative example:
+블롭이 언제 데이터를 복사하는 지 알고 싶다면, 다음의 실제 예제를 보세요.
+(If you want to check out when a Blob will copy data, here is an illustrative example:)
 
+    // 데이터가 처음에는 CPU에 있다고 가정하고, 블롭(blob)도 이미 있다고 가정합니다.
     // Assuming that data are on the CPU initially, and we have a blob.
     const Dtype* foo;
     Dtype* bar;
+    // 데이터를 CPU에서 GPU로 복사합니다.
     foo = blob.gpu_data(); // data copied cpu->gpu.
+    // 양쪽 데이터가 최신이기 때문에 아무 데이터도 복사되지 않습니다.
     foo = blob.cpu_data(); // no data copied since both have up-to-date contents.
+    // 아무 데이터도 복사되지 않습니다.
     bar = blob.mutable_gpu_data(); // no data copied.
+    // ... 뭔가 작업을 합니다 ...
     // ... some operations ...
+    // 아직 GPU를 사용하는 중이기 때문에 아무 데이터도 복사되지 않습니다.
     bar = blob.mutable_gpu_data(); // no data copied when we are still on GPU.
+    // GPU에서 데이터가 수정되었기 때문에 GPU에서 CPU로 데이터가 복사됩니다.
     foo = blob.cpu_data(); // data copied gpu->cpu, since the gpu side has modified the data
+    // 양쪽 데이터가 최신이기 때문에 아무 데이터도 복사되지 않습니다.
     foo = blob.gpu_data(); // no data copied since both have up-to-date contents
+    // 여전히 아무 데이터도 복사되지 않습니다.
     bar = blob.mutable_cpu_data(); // still no data copied.
+    // CPU에서 GPU로 데이터가 복사됩니다.
     bar = blob.mutable_gpu_data(); // data copied cpu->gpu.
+    // GPU에서 CPU로 데이터가 복사됩니다.
     bar = blob.mutable_cpu_data(); // data copied gpu->cpu.
 
-## Layer computation and connections
+## 레이어 계산과 연결 (Layer computation and connections)
 The layer is the essence of a model and the fundamental unit of computation. Layers convolve filters, pool, take inner products, apply nonlinearities like rectified-linear and sigmoid and other elementwise transformations, normalize, load data, and compute losses like softmax and hinge. See the layer catalogue for all operations. Most of the types needed for state-of-the-art deep learning tasks are there.
 
 A layer with bottom and top blob.
