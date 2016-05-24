@@ -119,14 +119,18 @@
 
 ## 신경망의 정의와 연산 (Net definition and operation)
 
+신경망은 함수와 함수의 기울기를 공동으로 합성(composition)과 자동 미분을 통해 정의합니다. 모든 레이어의 출력은 합성되어 주어진 작업에 대한 함수를 계산하게 되고, 모든 레이어의 후진은 합성되어 학습에 사용할 손실 값으로부터 기울기를 계산하게 됩니다. 카페 모델은 끝에서 끝을 아우르는 기계 학습 엔진입니다.
 (The net jointly defines a function and its gradient by composition and auto-differentiation. The composition of every layer’s output computes the function to do a given task, and the composition of every layer’s backward computes the gradient from the loss to learn the task. Caffe models are end-to-end machine learning engines.)
 
+신경망은 계산 그래프, 정확히는 방향성 비순환 그래프(DAG: Directed Acyclic Graph) 안에서 연결된 레이어의 집합입니다. 카페는 방향성 비순환 그래프의 레이어가 필요로 하는 모든 정보를 자동으로 기록해서 전진과 후진이 제대로 이루어졌는지를 확인합니다. 일반적인 신경망은 디스크에서 자료를 불러오는 데이터 레이어로 시작하여 분류(classification) 혹은 복원(reconstruction) 등과 같은 작업의 목표를 계산하는 손실 레이어로 끝납니다.
 (The net is a set of layers connected in a computation graph – a directed acyclic graph (DAG) to be exact. Caffe does all the bookkeeping for any DAG of layers to ensure correctness of the forward and backward passes. A typical net begins with a data layer that loads from disk and ends with a loss layer that computes the objective for a task such as classification or reconstruction.)
 
+신경망은 평범한 문자열로 된 모델링 언어로 작성된 여러 레이어와 그들간의 연결의 집합으로 정의됩니다. 단순한 로지스틱 회귀 분류는
 (The net is defined as a set of layers and their connections in a plaintext modeling language. A simple logistic regression classifier)
 
 <img src="fig/logreg.jpg" alt="Softmax Regression" width="256" />
 
+다음과 같이 정의됩니다.
 (is defined by)
 
     name: "LogReg"
