@@ -125,7 +125,7 @@
 신경망은 계산 그래프, 정확히는 방향성 비순환 그래프(방비그, DAG: Directed Acyclic Graph) 안에서 연결된 레이어의 집합입니다. 카페는 방향성 비순환 그래프의 레이어가 필요로 하는 모든 정보를 자동으로 기록해서 전진과 후진이 제대로 이루어졌는지를 확인합니다. 일반적인 신경망은 디스크에서 자료를 불러오는 데이터 레이어로 시작하여 분류(classification) 혹은 복원(reconstruction) 등과 같은 작업의 목표를 계산하는 손실 레이어로 끝납니다.
 (The net is a set of layers connected in a computation graph – a directed acyclic graph (DAG) to be exact. Caffe does all the bookkeeping for any DAG of layers to ensure correctness of the forward and backward passes. A typical net begins with a data layer that loads from disk and ends with a loss layer that computes the objective for a task such as classification or reconstruction.)
 
-신경망은 평범한 문자열로 된 모델링 언어로 작성된 여러 레이어와 그들간의 연결의 집합으로 정의됩니다. 단순한 로지스틱 회귀 분류기는
+신경망은 평범한 문자열(평문)로 된 모델링 언어로 작성된 여러 레이어와 그들간의 연결의 집합으로 정의됩니다. 단순한 로지스틱 회귀 분류기는
 (The net is defined as a set of layers and their connections in a plaintext modeling language. A simple logistic regression classifier)
 
 <img src="fig/logreg.jpg" alt="Softmax Regression" width="256" />
@@ -162,7 +162,7 @@
     }
 
 모델 초기화는 `Net::Init()`이 관리합니다. 초기화는 크게 보면 블롭과 레이어를 만들어서 전체 방비그(방향성 비순환 그래프)의 뼈대를 잡는 일과 (C++ 덕후를 위해: 신경망은 자신의 생존 기간 동안에 블롭과 레이어의 소유권을 가지게 됩니다.), 레이어의 `SetUp()` 함수를 호출하는 두 가지 일을 합니다. 또한 전체 신경망 구조 유효성 검사 등의 다른 관리 작업도 합니다. 또한 초기화 동안에 신경망은 스스로의 초기화 정보를 되는대로 INFO에 기록으로 남깁니다 ^^
-(Model initialization is handled by `Net::Init()`. The initialization mainly does two things: scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime), and calls the layers’ `SetUp()` function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. Also, during initialization the Net explains its initialization by logging to INFO as it goes:)
+(Model initialization is handled by `Net::Init()`. The initialization mainly does two things: scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime), and calls the layers’ `SetUp()` function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. Also, during initialization the Net explains its initialization by logging to INFO as it goes:))
 
     I0902 22:52:17.931977 2079114000 net.cpp:39] Initializing net from parameters:
     name: "LogReg"
@@ -203,13 +203,16 @@
     I0902 22:52:17.941818 2079114000 net.cpp:219] Network initialization done.
     I0902 22:52:17.941824 2079114000 net.cpp:220] Memory required for data: 201476
 
-
+신경망 생성 과정은 기기에 구애받지 않는다는 점을 기억해 주세요 - 위에서 블롭과 레이어가 구현 세부 사항을 모델 정의에서 가려 놓는다고 설명했었습니다. 생성 후 신경망은 `Caffe::mode()`와 `Caffe::set_mode()`를 통해 설정 하나만 바꾸면 CPU와 GPU중 어디서든 돌아갑니다. 레이어는 동일한 결과를 생성하는 CPU와 GPU용 함수들을 가지고 있습니다 (숫자 오류가 있을 수 있고, 그를 검사할 테스트가 있습니다). CPU / GPU 스위치는 매끄럽게 동작하며 모델의 정의와 무관합니다. 연구와 적용 어느 상황에서건 모델과 구현을 분리하는 것이 가장 좋습니다.
 (Note that the construction of the network is device agnostic - recall our earlier explanation that blobs and layers hide implementation details from the model definition. After construction, the network is run on either CPU or GPU by setting a single switch defined in `Caffe::mode()` and set by `Caffe::set_mode()`. Layers come with corresponding CPU and GPU routines that produce identical results (up to numerical errors, and with tests to guard it). The CPU / GPU switch is seamless and independent of the model definition. For research and deployment alike it is best to divide model and implementation.)
 
 ### 모델 형식 (Model format)
 
+모델은 평문 프로토콜 버퍼 도식(prototxt)으로 정의되며, 학습된 모델은 이진 프로토콜 버퍼(binaryproto)인 .caffemodel 파일로 직렬화됩니다.
 (The models are defined in plaintext protocol buffer schema (prototxt) while the learned models are serialized as binary protocol buffer (binaryproto) .caffemodel files.)
 
+모델 형식은 caffe.proto 안에 있는 프로토콜 버퍼 도식(protobuf schema)으로 정의됩니다. 소스 파일은 대부분 읽으면 이해가 가게 되어 있기 때문에 읽어 보기를 추천합니다.
 (The model format is defined by the protobuf schema in caffe.proto. The source file is mostly self-explanatory so one is encouraged to check it out.)
 
+카페는 직렬화 되었을 때의 작은 크기, 효율적인 직렬화, 이진 파일과 비교하여 사람이 읽을 수 있는 문자 형식, 여러 언어, 특히 C++와 파이썬에서 사용 가능한 효율적인 인터페이스 때문에 구글 프로토콜 버퍼를 사용합니다. 이 모든 특징은 카페가 모델을 만드는 데에 유연성과 확정성을 제공합니다.
 (Caffe speaks Google Protocol Buffer for the following strengths: minimal-size binary strings when serialized, efficient serialization, a human-readable text format compatible with the binary version, and efficient interface implementations in multiple languages, most notably C++ and Python. This all contributes to the flexibility and extensibility of modeling in Caffe.)
