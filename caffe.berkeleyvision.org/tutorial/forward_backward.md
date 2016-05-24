@@ -13,8 +13,8 @@
 
 <img src="fig/forward.jpg" alt="Forward pass" width="320" />
 
-데이터 x가 g(x)를 위해 벡터 내적 레이어를 통과하고 이어 h(g(x))를 위해 소프트맥스
-(The data x is passed through an inner product layer for g(x) then through a softmax for h(g(x))h(g(x)) and softmax loss to give fW(x)fW(x).
+데이터 x가 g(x)를 위해 벡터 내적 레이어를 통과하고 이어 h(g(x))를 위해 소프트맥스를 통과하며, f_W(x)를 위해 소프트맥스 손실을 통과합니다.
+(The data x is passed through an inner product layer for g(x) then through a softmax for h(g(x)) and softmax loss to give f_W(x).)
 
 The backward pass computes the gradient given the loss for learning. In backward Caffe reverse-composes the gradient of each layer to compute the gradient of the whole model by automatic differentiation. This is back-propagation. This pass goes from top to bottom.
 
