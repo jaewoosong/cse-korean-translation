@@ -14,4 +14,9 @@
   Year = {2014}
 }
 
-## 자유롭게 사용하시되 출처를 명시해주시고 아파치 라이센스 2.0을 따라주세요. (Feel free to use; just mention the source and follow Apache license 2.0)
+## 저작권 (Copyright)
+
+먼저, 각 문서 원본(제 번역본 말고)의 저작권을 지켜주세요.
+(First of all, please follow the copyrights of original documents (not my translation).
+
+제 번역본은 비상업적으로 자유롭게 사용하시되 출처를 명시해주시고 아파치 라이센스 2.0을 따라주세요. (Feel free to use my translation uncommercially; just mention the source and follow Apache license 2.0)
