@@ -108,7 +108,7 @@
 * 후진: 위의 출력에 대한 기울기가 주어졌을 때에 입력에 대한 기울기를 계산해서 밑으로 보냅니다. 인자(parameter)가 있는 레이어는 각 인자에 대한 기울기를 계산해서 내부에 저장해 놓습니다.
 (Backward: given the gradient w.r.t. the top output compute the gradient w.r.t. to the input and send to the bottom. A layer with parameters computes the gradient w.r.t. to its parameters and stores it internally.)
 
-더 자세히 말하자면, CPU와 GPU를 위해 전진과 후진 함수가 각각 두 개씩 구현됩니다. 만약 당신이 GPU용 함수를 구현하지 않으면 레이어는 예비용으로 CPU용 함수를 사용합니다. 이렇게 하면 빨리 실험을 해 볼 때에는 편리하겠지만 데이터 전송에 추가 자원이 필요하게 됩니다. (입력 값이 GPU에서 CPU로 복사되고, 출력 값이 다시 CPU에서 GPU로 복사됩니다.)
+더 자세히 말하자면, CPU와 GPU를 위해 전진과 후진 함수가 각각 두 개씩 구현됩니다. 만약 당신이 GPU용 함수를 구현하지 않으면 레이어는 예비용으로 CPU용 함수를 사용합니다. 이렇게 하면 빨리 실험을 해 볼 때에는 편리하겠지만 데이터 전송에 추가 자원이 필요하게 됩니다 (입력 값이 GPU에서 CPU로 복사되고, 출력 값이 다시 CPU에서 GPU로 복사됩니다.).
 (More specifically, there will be two Forward and Backward functions implemented, one for CPU and one for GPU. If you do not implement a GPU version, the layer will fall back to the CPU functions as a backup option. This may come handy if you would like to do quick experiments, although it may come with additional data transfer cost (its inputs will be copied from GPU to CPU, and its outputs will be copied back from CPU to GPU).)
 
 레이어는 신경망 전체에 대한 두 가지 중요한 책임을 지고 있는데, 입력을 받아서 출력을 내어 놓는 전진과 출력에 대한 기울기를 전달하는 후진, 그리고 전 단계에 있는 레이어로 역방향 전달되는 (back-propagated) 인자와 입력에 대한 기울기 계산이 그것입니다. 이 작업들은 단순히 각 레이어의 전진과 후진의 합성입니다.
@@ -122,7 +122,7 @@
 신경망은 함수와 함수의 기울기를 공동으로 합성(composition)과 자동 미분을 통해 정의합니다. 모든 레이어의 출력은 합성되어 주어진 작업에 대한 함수를 계산하게 되고, 모든 레이어의 후진은 합성되어 학습에 사용할 손실 값으로부터 기울기를 계산하게 됩니다. 카페 모델은 끝에서 끝을 아우르는 기계 학습 엔진입니다.
 (The net jointly defines a function and its gradient by composition and auto-differentiation. The composition of every layer’s output computes the function to do a given task, and the composition of every layer’s backward computes the gradient from the loss to learn the task. Caffe models are end-to-end machine learning engines.)
 
-신경망은 계산 그래프, 정확히는 방향성 비순환 그래프(DAG: Directed Acyclic Graph) 안에서 연결된 레이어의 집합입니다. 카페는 방향성 비순환 그래프의 레이어가 필요로 하는 모든 정보를 자동으로 기록해서 전진과 후진이 제대로 이루어졌는지를 확인합니다. 일반적인 신경망은 디스크에서 자료를 불러오는 데이터 레이어로 시작하여 분류(classification) 혹은 복원(reconstruction) 등과 같은 작업의 목표를 계산하는 손실 레이어로 끝납니다.
+신경망은 계산 그래프, 정확히는 방향성 비순환 그래프(방비그, DAG: Directed Acyclic Graph) 안에서 연결된 레이어의 집합입니다. 카페는 방향성 비순환 그래프의 레이어가 필요로 하는 모든 정보를 자동으로 기록해서 전진과 후진이 제대로 이루어졌는지를 확인합니다. 일반적인 신경망은 디스크에서 자료를 불러오는 데이터 레이어로 시작하여 분류(classification) 혹은 복원(reconstruction) 등과 같은 작업의 목표를 계산하는 손실 레이어로 끝납니다.
 (The net is a set of layers connected in a computation graph – a directed acyclic graph (DAG) to be exact. Caffe does all the bookkeeping for any DAG of layers to ensure correctness of the forward and backward passes. A typical net begins with a data layer that loads from disk and ends with a loss layer that computes the objective for a task such as classification or reconstruction.)
 
 신경망은 평범한 문자열로 된 모델링 언어로 작성된 여러 레이어와 그들간의 연결의 집합으로 정의됩니다. 단순한 로지스틱 회귀 분류기는
@@ -161,11 +161,13 @@
       top: "loss"
     }
 
+모델 초기화는 `Net::Init()`이 관리합니다. 초기화는 크게 보면 블롭과 레이어를 만들어서 전체 방비그(방향성 비순환 그래프)의 뼈대를 잡는 일과 (C++ 덕후를 위해: 신경망은 자신의 생존 기간 동안에 블롭과 레이어의 소유권을 가지게 됩니다.), 레이어의 `SetUp()` 함수를 호출하는 두 가지 일을 합니다. 또한 전체 신경망 구조 유효성 검사 등의 다른 관리 작업도 합니다. 또한 초기화 동안에 신경망은 스스로의 초기화 정보를 되는대로 INFO에 기록으로 남깁니다 ^^
 (Model initialization is handled by `Net::Init()`. The initialization mainly does two things: scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime), and calls the layers’ `SetUp()` function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. Also, during initialization the Net explains its initialization by logging to INFO as it goes:)
 
     I0902 22:52:17.931977 2079114000 net.cpp:39] Initializing net from parameters:
     name: "LogReg"
     [...model prototxt printout...]
+    # 신경망을 레이어 하나하나 만듭니다.
     # construct the network layer-by-layer
     I0902 22:52:17.932152 2079114000 net.cpp:67] Creating Layer mnist
     I0902 22:52:17.932165 2079114000 net.cpp:356] mnist -> data
@@ -184,6 +186,7 @@
     I0902 22:52:17.941305 2079114000 net.cpp:394] loss <- ip
     I0902 22:52:17.941314 2079114000 net.cpp:394] loss <- label
     I0902 22:52:17.941323 2079114000 net.cpp:356] loss -> loss
+    # 손실을 설정하고 후진 방식을 설정합니다.
     # set up the loss and configure the backward pass
     I0902 22:52:17.941328 2079114000 net.cpp:96] Setting up loss
     I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: (1)
@@ -191,12 +194,15 @@
     I0902 22:52:17.941779 2079114000 net.cpp:170] loss needs backward computation.
     I0902 22:52:17.941787 2079114000 net.cpp:170] ip needs backward computation.
     I0902 22:52:17.941794 2079114000 net.cpp:172] mnist does not need backward computation.
+    # 출력을 정합니다.
     # determine outputs
     I0902 22:52:17.941800 2079114000 net.cpp:208] This network produces output loss
+    # 초기화를 종료하고 메모리 사용량을 보고합니다.
     # finish initialization and report memory usage
     I0902 22:52:17.941810 2079114000 net.cpp:467] Collecting Learning Rate and Weight Decay.
     I0902 22:52:17.941818 2079114000 net.cpp:219] Network initialization done.
     I0902 22:52:17.941824 2079114000 net.cpp:220] Memory required for data: 201476
+
 
 (Note that the construction of the network is device agnostic - recall our earlier explanation that blobs and layers hide implementation details from the model definition. After construction, the network is run on either CPU or GPU by setting a single switch defined in `Caffe::mode()` and set by `Caffe::set_mode()`. Layers come with corresponding CPU and GPU routines that produce identical results (up to numerical errors, and with tests to guard it). The CPU / GPU switch is seamless and independent of the model definition. For research and deployment alike it is best to divide model and implementation.)
 
