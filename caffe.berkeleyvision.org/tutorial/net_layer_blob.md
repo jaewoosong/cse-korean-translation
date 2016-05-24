@@ -1,4 +1,4 @@
-# 블롭 (방울이라는 뜻), 레이어, 신경망: 카페 모델 해부 (Blobs, Layers, and Nets: anatomy of a Caffe model)
+# 블롭, 레이어, 신경망: 카페 모델 해부 (Blobs, Layers, and Nets: anatomy of a Caffe model)
 
 심층 신경망은 데이터 묶음을 다루는, 서로 연결되어 있는 레이어의 집합으로 표현되는 합성 모델입니다. 카페는 신경망을 레이어 하나하나마다 스스로의 모델 표현 방식으로 정의합니다. 신경망은 전체 모델을 입력값으로부터 loss까지 정의합니다. 데이터와 미분계수가 신경망을 따라서 앞으로 또 뒤로 흘러갈 때 카페는 정보를 블롭 (방울이라는 뜻) 형태를 사용해 저장하고 통신하고 따룹니다. 블롭은 이 프레임워크를 위한 표준 배열이며 통일된 메모리 인터페이스입니다. 모델과 계산을 설계하기 위해 다음으로 필요한 것은 레이어입니다. 신경망은 레이어의 모음, 그리고 레이어와 레이어 간의 연결의 모음입니다. 블롭에 대한 자세한 내용을 통해 정보가 레이어와 신경망에서 어떻게 저장되고 통신되는지 알 수 있습니다.
 (Deep networks are compositional models that are naturally represented as a collection of inter-connected layers that work on chunks of data. Caffe defines a net layer-by-layer in its own model schema. The network defines the entire model bottom-to-top from input data to loss. As data and derivatives flow through the network in the forward and backward passes Caffe stores, communicates, and manipulates the information as blobs: the blob is the standard array and unified memory interface for the framework. The layer comes next as the foundation of both model and computation. The net follows as the collection and connection of layers. The details of blob describe how information is stored and communicated in and across layers and nets.)
@@ -29,17 +29,20 @@
 * 채널 K는 특징(feature)의 차원입니다. 예를 들어 RGB 사진의 경우 K = 3 입니다.
 (Channel / K is the feature dimension e.g. for RGB images K = 3.)
  
-Note that although many blobs in Caffe examples are 4D with axes for image applications, it is totally valid to use blobs for non-image applications. For example, if you simply need fully-connected networks like the conventional multi-layer perceptron, use 2D blobs (shape (N, D)) and call the InnerProductLayer (which we will cover soon).
+카페 예제의 많은 블롭이 이미지 처리를 위한 축을 포함하는 4차원이지만, 블롭을 이미지 처리가 아닌 용도로 써도 당연히 괜찮습니다. 예를 들어 평범한 다중 레이어 퍼셉트론과 같은 가득 연결된 네트워크(fully-connected)가 필요하다면 2차원 블롭((N, D) 모양)을 사용하고 InnerProductLayer(나중에 설명할 것입니다)를 호출하면 됩니다.
+(Note that although many blobs in Caffe examples are 4D with axes for image applications, it is totally valid to use blobs for non-image applications. For example, if you simply need fully-connected networks like the conventional multi-layer perceptron, use 2D blobs (shape (N, D)) and call the InnerProductLayer (which we will cover soon).)
 
-Parameter blob dimensions vary according to the type and configuration of the layer. For a convolution layer with 96 filters of 11 x 11 spatial dimension and 3 inputs the blob is 96 x 3 x 11 x 11. For an inner product / fully-connected layer with 1000 output channels and 1024 input channels the parameter blob is 1000 x 1024.
+블롭의 차원에 대한 인자는 레이어의 종류와 구성에 따라 달라집니다. 11 x 11의 공간 차원 필터 96개와 3개의 입력으로 이루어진 합성곱 신경망(convolutional network)의 경우 블롭은 96 x 3 x 11 x 11이 됩니다. 1000개의 출력 채널과 1024개의 입력 채널로 이루어진 가득 연결된 레이어(fully-connected layer)나 벡터 내적(inner product)의 경우 블롭의 인자는 1000 x 1024가 됩니다.
+(Parameter blob dimensions vary according to the type and configuration of the layer. For a convolution layer with 96 filters of 11 x 11 spatial dimension and 3 inputs the blob is 96 x 3 x 11 x 11. For an inner product / fully-connected layer with 1000 output channels and 1024 input channels the parameter blob is 1000 x 1024.)
 
-For custom data it may be necessary to hack your own input preparation tool or data layer. However once your data is in your job is done. The modularity of layers accomplishes the rest of the work for you.
+스스로의 데이터에 대해서는 어쩌면 스스로의 입력 가공 도구나 데이터 레이어를 만들어야 할 수도 있습니다. 하지만 어쨌든 데이터가 입력되면 할 일은 끝난 것입니다. 레이어의 모듈성(modularity)이 나머지 일을 대신 해 줍니다.
+(For custom data it may be necessary to hack your own input preparation tool or data layer. However once your data is in your job is done. The modularity of layers accomplishes the rest of the work for you.)
 
 ### 구현 상세 내용 (Implementation Details)
 
-As we are often interested in the values as well as the gradients of the blob, a Blob stores two chunks of memories, data and diff. The former is the normal data that we pass along, and the latter is the gradient computed by the network.
+(As we are often interested in the values as well as the gradients of the blob, a Blob stores two chunks of memories, _data_ and _diff_. The former is the normal data that we pass along, and the latter is the gradient computed by the network.)
 
-Further, as the actual values could be stored either on the CPU and on the GPU, there are two different ways to access them: the const way, which does not change the values, and the mutable way, which changes the values:
+(Further, as the actual values could be stored either on the CPU and on the GPU, there are two different ways to access them: the const way, which does not change the values, and the mutable way, which changes the values:)
 
 const Dtype* cpu_data() const;
 Dtype* mutable_cpu_data();
