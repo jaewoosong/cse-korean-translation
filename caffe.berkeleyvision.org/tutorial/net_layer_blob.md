@@ -77,7 +77,7 @@ The layer is the essence of a model and the fundamental unit of computation. Lay
 
 A layer with bottom and top blob.
 
-<img src="http://caffe.berkeleyvision.org/tutorial/fig/layer.jpg" alt="A layer with bottom and top blob." width="256" />
+<img src="fig/layer.jpg" alt="A layer with bottom and top blob." width="256" />
 
 A layer takes input through bottom connections and makes output through top connections.
 
@@ -101,7 +101,7 @@ The net is defined as a set of layers and their connections in a plaintext model
 
 Softmax Regression
 
-<img src="http://caffe.berkeleyvision.org/tutorial/fig/logreg.jpg" alt="Softmax Regression" width="256" />
+<img src="fig/logreg.jpg" alt="Softmax Regression" width="256" />
 
 is defined by
 
