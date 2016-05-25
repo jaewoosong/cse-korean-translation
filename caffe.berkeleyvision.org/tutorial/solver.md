@@ -19,26 +19,35 @@ Nesterov’s Accelerated Gradient (`type: "Nesterov"`) and
 * 기울기를 최근 크기의 평균으로 나누기 (RMSprop) (`type: "RMSProp"`)
 RMSprop (`type: "RMSProp"`)
 
-연산기는
+연산기는 다음과 같은 일을 합니다.
 (The solver)
 
-1. scaffolds the optimization bookkeeping and creates the training network for learning and test network(s) for evaluation.
-2. iteratively optimizes by calling forward / backward and updating parameters
-3. (periodically) evaluates the test networks
-4. snapshots the model and solver state throughout the optimization
+1. 최적화 기록에 대한 뼈대를 세우고 학습을 위한 학습 신경망과 평가를 위한 테스트 신경망을 만듭니다.
+(scaffolds the optimization bookkeeping and creates the training network for learning and test network(s) for evaluation.)
+2. 전진과 후진을 호출하고 인자를 갱신하는 과정을 반복함으로써 최적화를 합니다.
+(iteratively optimizes by calling forward / backward and updating parameters)
+3. (주기적으로) 테스트 신경망을 평가합니다.
+((periodically) evaluates the test networks)
+4. 최적화 과정에서의 모델과 연산기 상태를 기록합니다.
+(snapshots the model and solver state throughout the optimization)
 
-where each iteration
+그리고 각각의 반복마다는
+(where each iteration)
 
-1. calls network forward to compute the output and loss
-2. calls network backward to compute the gradients
-3. incorporates the gradients into parameter updates according to the solver method
-4. updates the solver state according to learning rate, history, and method
+1.
+(calls network forward to compute the output and loss)
+2.
+(calls network backward to compute the gradients)
+3.
+(incorporates the gradients into parameter updates according to the solver method)
+4.
+(updates the solver state according to learning rate, history, and method)
 
 to take the weights all the way from initialization to learned model.
 
 Like Caffe models, Caffe solvers run in CPU / GPU modes.
 
-Methods
+## 방법 (Methods)
 The solver methods address the general optimization problem of loss minimization. For dataset DD, the optimization objective is the average loss over all |D||D| data instances throughout the dataset
 
 L(W)=1|D|∑i|D|fW(X(i))+λr(W)
