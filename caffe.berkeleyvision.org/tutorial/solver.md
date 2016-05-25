@@ -31,36 +31,42 @@ RMSprop (`type: "RMSProp"`)
 4. 최적화 과정에서의 모델과 연산기 상태를 기록합니다.
 (snapshots the model and solver state throughout the optimization)
 
-그리고 각각의 반복마다는
+그리고 각각의 반복마다
 (where each iteration)
 
-1.
+1. 신경망을 전진시켜 출력과 손실을 계산합니다.
 (calls network forward to compute the output and loss)
-2.
+2. 신경망을 후진시켜 기울기를 계산합니다.
 (calls network backward to compute the gradients)
-3.
+3. 기울기를 연산기 방식에 맞추어 인자 갱신에 사용합니다.
 (incorporates the gradients into parameter updates according to the solver method)
-4.
+4. 연산기를 학습률, 과거, 방식에 맞추어 갱신합니다.
 (updates the solver state according to learning rate, history, and method)
 
-to take the weights all the way from initialization to learned model.
+위의 과정을 통해 처음부터 학습된 모델까지의 모든 과정에 걸친 가중치를 얻어냅니다.
+(to take the weights all the way from initialization to learned model.)
 
-Like Caffe models, Caffe solvers run in CPU / GPU modes.
+카페 모델의 경우와 같이, 카페 연산기도 CPU / GPU 상태에서 실행됩니다.
+(Like Caffe models, Caffe solvers run in CPU / GPU modes.)
 
-## 방법 (Methods)
-The solver methods address the general optimization problem of loss minimization. For dataset DD, the optimization objective is the average loss over all |D||D| data instances throughout the dataset
+## 방식 (Methods)
+연산기의 방식은 손실 최소화에 대한 일반적인 최적화 문제를 다룹니다. D라는 데이터셋에 대한 최적화 대상은 데이터셋 전체에 걸친 모든 데이터 항목 |D|에 대한 평균 손실인 L(W) 입니다.
+(The solver methods address the general optimization problem of loss minimization. For dataset D, the optimization objective is the average loss over all |D| data instances throughout the dataset)
 
-L(W)=1|D|∑i|D|fW(X(i))+λr(W)
-L(W)=1|D|∑i|D|fW(X(i))+λr(W)
-where fW(X(i))fW(X(i)) is the loss on data instance X(i)X(i) and r(W)r(W) is a regularization term with weight λλ. |D||D| can be very large, so in practice, in each solver iteration we use a stochastic approximation of this objective, drawing a mini-batch of N<<|D|N<<|D| instances:
+L(W)=(1/|D|)∑\_i^|D|^f\_W(X^(i))+λr(W)
 
-L(W)≈1N∑iNfW(X(i))+λr(W)
-L(W)≈1N∑iNfW(X(i))+λr(W)
-The model computes fWfW in the forward pass and the gradient ∇fW∇fW in the backward pass.
+여기서 f_W(X^(i))는 데이터 항목 X^(i)로 인한 손실이고 r(W)는 가중치 λ가 사용된 정형화입니다. |D|는 매우 클 수 있으며, 따라서 현업에서는 목표를 달성하기 위해 각각의 연산기 반복에 대해 확률적 근사를 사용하여 N<<|D|의 항목으로 구성된 미니배치를 만듭니다.
+(where f_W(X^(i)) is the loss on data instance X^(i) and r(W) is a regularization term with weight λ. |D| can be very large, so in practice, in each solver iteration we use a stochastic approximation of this objective, drawing a mini-batch of N<<|D| instances:)
 
-The parameter update ΔWΔW is formed by the solver from the error gradient ∇fW∇fW, the regularization gradient ∇r(W)∇r(W), and other particulars to each method.
+L(W)≈(1/N)∑\_i^Nf\_W(X^(i))+λr(W)
 
-SGD
+모델은 전진 과정에서 f\_W를 계산하고 후진 과정에서 기울기인 ∇f\_W를 계산합니다.
+(The model computes f\_W in the forward pass and the gradient ∇f\_W in the backward pass.)
+
+인자 갱신값인 ΔW는 에러 기울기인 ∇f\_W, 정형화 기울기인 ∇r(W)와 그 외 각 방식에 따른 요소들을 사용해서 연산기가 계산해냅니다.
+(The parameter update ΔW is formed by the solver from the error gradient ∇f\_W, the regularization gradient ∇r(W), and other particulars to each method.)
+
+## 확률적 경사 하강법 (SGD)
 
 Stochastic gradient descent (type: "SGD") updates the weights WW by a linear combination of the negative gradient ∇L(W)∇L(W) and the previous weight update VtVt. The learning rate αα is the weight of the negative gradient. The momentum μμ is the weight of the previous update.
 
