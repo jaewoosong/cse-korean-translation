@@ -50,12 +50,12 @@ RMSprop (`type: "RMSProp"`)
 (Like Caffe models, Caffe solvers run in CPU / GPU modes.)
 
 ## 방식 (Methods)
-연산기의 방식은 손실 최소화에 대한 일반적인 최적화 문제를 다룹니다. D라는 데이터셋에 대한 최적화 대상은 데이터셋 전체에 걸친 모든 데이터 항목 |D|에 대한 평균 손실인 L(W) 입니다.
+연산기의 방식은 손실 최소화에 대한 일반적인 최적화 문제를 다룹니다. D라는 데이터셋에 대한 최적화 대상은 데이터셋 전체에 걸친 모든 데이터 항목 |D|개에 대한 평균 손실인 L(W) 입니다.
 (The solver methods address the general optimization problem of loss minimization. For dataset D, the optimization objective is the average loss over all |D| data instances throughout the dataset)
 
 L(W)=(1/|D|)∑\_i^|D|^f\_W(X^(i))+λr(W)
 
-여기서 f_W(X^(i))는 데이터 항목 X^(i)로 인한 손실이고 r(W)는 가중치 λ가 사용된 정형화입니다. |D|는 매우 클 수 있으며, 따라서 현업에서는 목표를 달성하기 위해 각각의 연산기 반복에 대해 확률적 근사를 사용하여 N<<|D|의 항목으로 구성된 미니배치를 만듭니다.
+여기서 f_W(X^(i))는 데이터 항목 X^(i)로 인한 손실이고 r(W)는 가중치 λ가 사용된 정형화입니다. |D|는 매우 클 수 있으며, 따라서 현업에서는 목표를 달성하기 위해 각각의 연산기 반복에 대해 확률적 근사를 사용하여 N<<|D|개의 항목으로 구성된 미니배치를 만듭니다.
 (where f_W(X^(i)) is the loss on data instance X^(i) and r(W) is a regularization term with weight λ. |D| can be very large, so in practice, in each solver iteration we use a stochastic approximation of this objective, drawing a mini-batch of N<<|D| instances:)
 
 L(W)≈(1/N)∑\_i^Nf\_W(X^(i))+λr(W)
