@@ -1,0 +1,6 @@
+{
+  "name": "Translation",
+  "tagline": "각종 컴퓨터 과학, 공학 문서를 한국어로 번역하고 있습니다. (I translate various computer science and engineering documents into Korean.)",
+  "body": "# 한국어로 번역하자 (Let's translate into Korean)\r\n\r\n각종 컴퓨터 과학, 공학 문서를 한국어로 번역하고 있습니다.\r\n(I translate various computer science and engineering documents into Korean.)\r\n\r\n## 현재 번역중인 문서 (Currently translating)\r\n\r\n### 카페 (Caffe)\r\n* http://caffe.berkeleyvision.org/\r\n* @article{jia2014caffe,\r\n  Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},\r\n  Journal = {arXiv preprint arXiv:1408.5093},\r\n  Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},\r\n  Year = {2014}\r\n}\r\n\r\n## 저작권 (Copyright)\r\n\r\n먼저, 각 문서 원본(제 번역본 말고)의 저작권을 지켜주세요.\r\n(First of all, please follow the copyrights of original documents (not my translation).)\r\n\r\n제 번역본은 비상업적으로 자유롭게 사용하시되 출처를 명시해주시고 아파치 라이센스 2.0을 따라주세요. (Feel free to use my translation uncommercially; just mention the source and follow Apache license 2.0)\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
