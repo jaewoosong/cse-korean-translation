@@ -8,19 +8,14 @@
 
 * 확률적 경사 하강법 (`type: "SGD"`)
 (Stochastic Gradient Descent (`type: "SGD"`),)
-
 * 조정 가능한 학습률 방식 (AdaDelta) (`type: "AdaDelta"`)
 (AdaDelta (`type: "AdaDelta"`),)
-
 * 조정 가능한 기울기 (`type: "AdaGrad"`)
 (Adaptive Gradient (`type: "AdaGrad"`),)
-
 * 아담 (`type: "Adam"`)
 (Adam (`type: "Adam"`),)
-
 * 네스테로프 가속 기울기 (`type: "Nesterov"`)
 Nesterov’s Accelerated Gradient (`type: "Nesterov"`) and
-
 * 기울기를 최근 크기의 평균으로 나누기 (RMSprop) (`type: "RMSProp"`)
 RMSprop (`type: "RMSProp"`)
 
