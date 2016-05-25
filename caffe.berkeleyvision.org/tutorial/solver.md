@@ -50,6 +50,7 @@ RMSprop (`type: "RMSProp"`)
 (Like Caffe models, Caffe solvers run in CPU / GPU modes.)
 
 ## 방식 (Methods)
+
 연산기의 방식은 손실 최소화에 대한 일반적인 최적화 문제를 다룹니다. D라는 데이터셋에 대한 최적화 대상은 데이터셋 전체에 걸친 모든 데이터 항목 |D|개에 대한 평균 손실인 L(W) 입니다.
 (The solver methods address the general optimization problem of loss minimization. For dataset D, the optimization objective is the average loss over all |D| data instances throughout the dataset)
 
@@ -66,7 +67,7 @@ L(W)≈(1/N)∑\_i^Nf\_W(X^(i))+λr(W)
 인자 갱신값인 ΔW는 에러 기울기인 ∇f\_W, 정형화 기울기인 ∇r(W)와 그 외 각 방식에 따른 요소들을 사용해서 연산기가 계산해냅니다.
 (The parameter update ΔW is formed by the solver from the error gradient ∇f\_W, the regularization gradient ∇r(W), and other particulars to each method.)
 
-## 확률적 경사 하강법 (SGD)
+### 확률적 경사 하강법 (SGD)
 
 Stochastic gradient descent (type: "SGD") updates the weights WW by a linear combination of the negative gradient ∇L(W)∇L(W) and the previous weight update VtVt. The learning rate αα is the weight of the negative gradient. The momentum μμ is the weight of the previous update.
 
@@ -110,7 +111,7 @@ Note also that the above settings are merely guidelines, and they’re definitel
 
 [1] A. Krizhevsky, I. Sutskever, and G. Hinton. ImageNet Classification with Deep Convolutional Neural Networks. Advances in Neural Information Processing Systems, 2012.
 
-AdaDelta
+### 조정 가능한 학습률 방식 (AdaDelta)
 
 The AdaDelta (type: "AdaDelta") method (M. Zeiler [1]) is a “robust learning rate method”. It is a gradient-based optimization method (like SGD). The update formulas are
 
@@ -122,7 +123,7 @@ and
 (Wt+1)i=(Wt)i−α(vt)i.
 [1] M. Zeiler ADADELTA: AN ADAPTIVE LEARNING RATE METHOD. arXiv preprint, 2012.
 
-AdaGrad
+### 조정 가능한 기울기 (AdaGrad)
 
 The adaptive gradient (type: "AdaGrad") method (Duchi et al. [1]) is a gradient-based optimization method (like SGD) that attempts to “find needles in haystacks in the form of very predictive but rarely seen features,” in Duchi et al.’s words. Given the update information from all previous iterations (∇L(W))t′(∇L(W))t′ for t′∈{1,2,...,t}t′∈{1,2,...,t}, the update formulas proposed by [1] are as follows, specified for each component ii of the weights WW:
 
@@ -132,7 +133,7 @@ Note that in practice, for weights W∈RdW∈Rd, AdaGrad implementations (includ
 
 [1] J. Duchi, E. Hazan, and Y. Singer. Adaptive Subgradient Methods for Online Learning and Stochastic Optimization. The Journal of Machine Learning Research, 2011.
 
-Adam
+## 아담 (Adam)
 
 The Adam (type: "Adam"), proposed in Kingma et al. [1], is a gradient-based optimization method (like SGD). This includes an “adaptive moment estimation” (mt,vtmt,vt) and can be regarded as a generalization of AdaGrad. The update formulas are
 
@@ -146,7 +147,7 @@ Kingma et al. [1] proposed to use β1=0.9,β2=0.999,ε=10−8β1=0.9,β2=0.999,�
 
 [1] D. Kingma, J. Ba. Adam: A Method for Stochastic Optimization. International Conference for Learning Representations, 2015.
 
-NAG
+### 네스테로프 가속 기울기 (NAG)
 
 Nesterov’s accelerated gradient (type: "Nesterov") was proposed by Nesterov [1] as an “optimal” method of convex optimization, achieving a convergence rate of O(1/t2)O(1/t2) rather than the O(1/t)O(1/t). Though the required assumptions to achieve the O(1/t2)O(1/t2) convergence typically will not hold for deep networks trained with Caffe (e.g., due to non-smoothness and non-convexity), in practice NAG can be a very effective method for optimizing certain types of deep learning architectures, as demonstrated for deep MNIST autoencoders by Sutskever et al. [2].
 
@@ -162,7 +163,7 @@ What distinguishes the method from SGD is the weight setting WW on which we comp
 
 [2] I. Sutskever, J. Martens, G. Dahl, and G. Hinton. On the Importance of Initialization and Momentum in Deep Learning. Proceedings of the 30th International Conference on Machine Learning, 2013.
 
-RMSprop
+### 기울기를 최근 크기의 평균으로 나누기 (RMSprop)
 
 The RMSprop (type: "RMSProp"), suggested by Tieleman in a Coursera course lecture, is a gradient-based optimization method (like SGD). The update formulas are
 
@@ -174,7 +175,8 @@ If the gradient updates results in oscillations the gradient is reduced by times
 
 [1] T. Tieleman, and G. Hinton. RMSProp: Divide the gradient by a running average of its recent magnitude. COURSERA: Neural Networks for Machine Learning.Technical report, 2012.
 
-Scaffolding
+## 뼈대 세우기 (Scaffolding)
+
 The solver scaffolding prepares the optimization method and initializes the model to be learned in `Solver::Presolve()`.
 
     > caffe train -solver examples/mnist/lenet_solver.prototxt
@@ -256,10 +258,13 @@ Completion
 
     I0902 13:35:56.806970 16020 solver.cpp:46] Solver scaffolding done.
     I0902 13:35:56.806984 16020 solver.cpp:165] Solving LeNet
-Updating Parameters
+
+## 인자 갱신 (Updating Parameters)
+
 The actual weight update is made by the solver then applied to the net parameters in Solver::ComputeUpdateValue(). The ComputeUpdateValue method incorporates any weight decay r(W)r(W) into the weight gradients (which currently just contain the error gradients) to get the final gradient with respect to each network weight. Then these gradients are scaled by the learning rate αα and the update to subtract is stored in each parameter Blob’s diff field. Finally, the Blob::Update method is called on each parameter blob, which performs the final update (subtracting the Blob’s diff from its data).
 
-Snapshotting and Resuming
+## 저장하고 재개하기 (Snapshotting and Resuming)
+
 The solver snapshots the weights and its own state during training in Solver::Snapshot() and Solver::SnapshotSolverState(). The weight snapshots export the learned model while the solver snapshots allow training to be resumed from a given point. Training is resumed by Solver::Restore() and Solver::RestoreSolverState().
 
 Weights are saved without extension while solver states are saved with .solverstate extension. Both files will have an _iter_N suffix for the snapshot iteration number.
