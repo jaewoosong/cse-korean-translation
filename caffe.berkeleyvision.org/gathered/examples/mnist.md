@@ -1,18 +1,27 @@
-Training LeNet on MNIST with Caffe
-We will assume that you have Caffe successfully compiled. If not, please refer to the Installation page. In this tutorial, we will assume that your Caffe installation is located at CAFFE_ROOT.
+# 카페로 LeNet을 MNIST에 대해 학습시키기 (Training LeNet on MNIST with Caffe)
 
-Prepare Datasets
-You will first need to download and convert the data format from the MNIST website. To do this, simply run the following commands:
+카페가 성공적으로 컴파일 되었다고 가정하겠습니다. 그렇지 않다면 [설치 페이지]()를 참조해 주세요. 이 강좌에서는 카페가 `CAFFE_ROOT`에 있다고 가정합니다.
+(We will assume that you have Caffe successfully compiled. If not, please refer to the [Installation page](). In this tutorial, we will assume that your Caffe installation is located at `CAFFE_ROOT`.)
 
-cd $CAFFE_ROOT
-./data/mnist/get_mnist.sh
-./examples/mnist/create_mnist.sh
-If it complains that wget or gunzip are not installed, you need to install them respectively. After running the script there should be two datasets, mnist_train_lmdb, and mnist_test_lmdb.
+## 데이터셋 준비 (Prepare Datasets)
 
-LeNet: the MNIST Classification Model
-Before we actually run the training program, let’s explain what will happen. We will use the LeNet network, which is known to work well on digit classification tasks. We will use a slightly different version from the original LeNet implementation, replacing the sigmoid activations with Rectified Linear Unit (ReLU) activations for the neurons.
+먼저 MNIST 웹사이트에서 데이터를 받고 형식을 변환해야 합니다. 간단히 다음의 명령어를 입력하세요.
+(You will first need to download and convert the data format from the MNIST website. To do this, simply run the following commands:)
 
-The design of LeNet contains the essence of CNNs that are still used in larger models such as the ones in ImageNet. In general, it consists of a convolutional layer followed by a pooling layer, another convolution layer followed by a pooling layer, and then two fully connected layers similar to the conventional multilayer perceptrons. We have defined the layers in $CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt.
+    cd $CAFFE_ROOT
+    ./data/mnist/get_mnist.sh
+    ./examples/mnist/create_mnist.sh
+
+만약에 `wget`이나 `gunzip`이 설치되지 않았다고 불평하는 메시지가 나오면 그 프로그램들을 설치해 주세요. 위의 스크립트를 실행하면 `mnist_train_lmdb`와 `mnist_test_lmdb` 두 데이터셋이 생겨야 합니다.
+(If it complains that `wget` or `gunzip` are not installed, you need to install them respectively. After running the script there should be two datasets, `mnist_train_lmdb`, and `mnist_test_lmdb`.)
+
+## LeNet: MNIST 분류 모델 (LeNet: the MNIST Classification Model)
+
+학습 프로그램을 실행하기 전에 설명을 먼저 하도록 하겠습니다. 숫자 분류 작업에 뛰어나다고 알려진 LeNet 신경망을 사용할 것입니다. 뉴런의 활성화를 위해 시그모이드 활성 대신 수정된 선형 단위(ReLU) 활성을 사용했다는 점이 원본 LeNet의 구현과 살짝 다른 점입니다.
+(Before we actually run the training program, let’s explain what will happen. We will use the LeNet network, which is known to work well on digit classification tasks. We will use a slightly different version from the original LeNet implementation, replacing the sigmoid activations with Rectified Linear Unit (ReLU) activations for the neurons.)
+
+
+(The design of LeNet contains the essence of CNNs that are still used in larger models such as the ones in ImageNet. In general, it consists of a convolutional layer followed by a pooling layer, another convolution layer followed by a pooling layer, and then two fully connected layers similar to the conventional multilayer perceptrons. We have defined the layers in `$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt`.)
 
 Define the MNIST Network
 This section explains the lenet_train_test.prototxt model definition that specifies the LeNet model for MNIST handwritten digit classification. We assume that you are familiar with Google Protobuf, and assume that you have read the protobuf definitions used by Caffe, which can be found at $CAFFE_ROOT/src/caffe/proto/caffe.proto.
