@@ -52,12 +52,14 @@ LeNet의 설계는 이미지넷 등에 적용되는 더 큰 신경망에서도 �
       top: "data"
       top: "label"
     }
-    
+
+자세히 보자면, 이 레이어는 이름이 `mnist`, 종류가 `data`이고 주어진 lmdb 파일로부터 데이터를 읽는 작업을 합니다. 일괄 처리 크기는 64이고, 입력되는 픽셀을 조정해서 픽셀 값이 [0,1) (0 이상 1 미만)이 되게 합니다. 0.00390625은 무엇일까요? 1 나누기 256입니다. 마지막으로 이 제이어는 두 개의 블롭, `data` 블롭과 `label` 블롭을 생성합니다.
 (Specifically, this layer has name `mnist`, type `data`, and it reads the data from the given lmdb source. We will use a batch size of 64, and scale the incoming pixels so that they are in the range [0,1). Why 0.00390625? It is 1 divided by 256. And finally, this layer produces two blobs, one is the `data` blob, and one is the `label` blob.)
 
-###Writing the Convolution Layer
+### 합성곱 신경망 작성하기 (Writing the Convolution Layer)
 
-Let’s define the first convolution layer:
+첫 번째 합성곱 레이어를 정의합시다.
+(Let’s define the first convolution layer:)
 
     layer {
       name: "conv1"
@@ -78,15 +80,20 @@ Let’s define the first convolution layer:
       bottom: "data"
       top: "conv1"
     }
-This layer takes the data blob (it is provided by the data layer), and produces the conv1 layer. It produces outputs of 20 channels, with the convolutional kernel size 5 and carried out with stride 1.
 
-The fillers allow us to randomly initialize the value of the weights and bias. For the weight filler, we will use the xavier algorithm that automatically determines the scale of initialization based on the number of input and output neurons. For the bias filler, we will simply initialize it as constant, with the default filling value 0.
+이 레이어는 `data` 블롭(데이터 레이어로부터 제공된)을 받아서 `conv1` 레이어를 만듭니다. 이 레이어는 출력 채널이 20개, 출력 합성곱 커널(알맹이라는 뜻) 크기가 5이고 실행될 때의 뜀뛰기(stride) 값은 1입니다.
+(This layer takes the `data` blob (it is provided by the data layer), and produces the `conv1` layer. It produces outputs of 20 channels, with the convolutional kernel size 5 and carried out with stride 1.)
 
-lr_mults are the learning rate adjustments for the layer’s learnable parameters. In this case, we will set the weight learning rate to be the same as the learning rate given by the solver during runtime, and the bias learning rate to be twice as large as that - this usually leads to better convergence rates.
+충전재(filler)를 통해 무작위로 가중치와 편향치(bias)를 초기화할 수 있습니다. 가중치 충전재(weight filler)의 경우 입력과 출력 뉴런의 개수에 근거하여 자동으로 초기화 시 크기 조절량을 결정해주는 `xavier` 알고리즘을 사용합니다. 편향치 충전재(bias filler)의 경우 간단하게 상수로 초기화하며 그 경우 기본값은 0입니다.
+(The fillers allow us to randomly initialize the value of the weights and bias. For the weight filler, we will use the `xavier` algorithm that automatically determines the scale of initialization based on the number of input and output neurons. For the bias filler, we will simply initialize it as constant, with the default filling value 0.)
 
-### Writing the Pooling Layer
+`lr_mults`는 레이어의 학습 가능한 인자들에 대한 학습률 조정치입니다. 이번 경우 가중치 학습률을 연산기가 실행 시 만들어내는 학습률과 같게 되도록 설정하였고, 편향치 학습률은 그것의 두 배가 되도록 설정하였습니다 - 이 설정이 종종 좋은 수렴률을 보여줍니다.
+(`lr_mult`s are the learning rate adjustments for the layer’s learnable parameters. In this case, we will set the weight learning rate to be the same as the learning rate given by the solver during runtime, and the bias learning rate to be twice as large as that - this usually leads to better convergence rates.)
 
-Phew. Pooling layers are actually much easier to define:
+### 통합 레이어 작성하기 (Writing the Pooling Layer)
+
+휴우~. 사실 통합 레이어는 만들기가 훨씬 쉽습니다.
+(Phew. Pooling layers are actually much easier to define:)
 
     layer {
       name: "pool1"
@@ -99,13 +106,17 @@ Phew. Pooling layers are actually much easier to define:
       bottom: "conv1"
       top: "pool1"
     }
-This says we will perform max pooling with a pool kernel size 2 and a stride of 2 (so no overlapping between neighboring pooling regions).
 
-Similarly, you can write up the second convolution and pooling layers. Check `$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt` for details.
+크기 2의 통합 커널로 2씩 뜀뛰기(stride)를 해서 (근접한 통합 영역끼리 겹치는 부분이 없도록) 최대치로 통합(max pooling)을 한다는 뜻입니다.
+(This says we will perform max pooling with a pool kernel size 2 and a stride of 2 (so no overlapping between neighboring pooling regions).)
 
-### Writing the Fully Connected Layer
+비슷하게 두 번째 합성곱과 통합 레이어를 만들 수 있습니다. 자세한 내용은 `$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt`를 참조하세요.
+(Similarly, you can write up the second convolution and pooling layers. Check `$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt` for details.)
 
-Writing a fully connected layer is also simple:
+### 모두 연결된 레이어 만들기 (Writing the Fully Connected Layer)
+
+모두 연결된 레이어를 만드는 것 또한 매우 간단합니다.
+(Writing a fully connected layer is also simple:)
 
     layer {
       name: "ip1"
@@ -124,10 +135,11 @@ Writing a fully connected layer is also simple:
       bottom: "pool2"
       top: "ip1"
     }
-    
-This defines a fully connected layer (known in Caffe as an InnerProduct layer) with 500 outputs. All other lines look familiar, right?
 
-###Writing the ReLU Layer
+500개의 출력을 만드는 모두 연결된 레이어(카페에서는 `내적`(`InnerProduct`) 레이어라고 부릅니다)입니다. 다른 내용은 다 눈에 익지요?
+(This defines a fully connected layer (known in Caffe as an `InnerProduct` layer) with 500 outputs. All other lines look familiar, right?)
+
+### Writing the ReLU Layer
 
 A ReLU Layer is also simple:
 
