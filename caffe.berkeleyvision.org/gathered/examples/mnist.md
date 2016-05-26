@@ -20,18 +20,23 @@
 학습 프로그램을 실행하기 전에 설명을 먼저 하도록 하겠습니다. 숫자 분류 작업에 뛰어나다고 알려진 LeNet 신경망을 사용할 것입니다. 뉴런의 활성화를 위해 시그모이드 활성 대신 수정된 선형 단위(ReLU) 활성을 사용했다는 점이 원본 LeNet의 구현과 살짝 다른 점입니다.
 (Before we actually run the training program, let’s explain what will happen. We will use the LeNet network, which is known to work well on digit classification tasks. We will use a slightly different version from the original LeNet implementation, replacing the sigmoid activations with Rectified Linear Unit (ReLU) activations for the neurons.)
 
-
+LeNet의 설계는 이미지넷 등에 적용되는 더 큰 신경망에서도 아직도 사용되는 합성곱 신경망(CNN)의 핵심을 담고 있습니다. 크게 보자면 LeNet은 합성곱 레이어와 그에 뒤따라 오는 통합(pooling) 레이어, 또다시 합성곱 레이어와 통합 레이어, 그 다음에 평범한 다중 레이어 퍼셉트론과 비슷하게 상대방의 모든 뉴런과 서로 연결된 두 레이어(fully connected layers)로 이루어져 있습니다. 레이어들은 `$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt`에 정의되어 있습니다.
 (The design of LeNet contains the essence of CNNs that are still used in larger models such as the ones in ImageNet. In general, it consists of a convolutional layer followed by a pooling layer, another convolution layer followed by a pooling layer, and then two fully connected layers similar to the conventional multilayer perceptrons. We have defined the layers in `$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt`.)
 
-## Define the MNIST Network
-This section explains the lenet_train_test.prototxt model definition that specifies the LeNet model for MNIST handwritten digit classification. We assume that you are familiar with Google Protobuf, and assume that you have read the protobuf definitions used by Caffe, which can be found at $CAFFE_ROOT/src/caffe/proto/caffe.proto.
+## MNIST 신경망 정의하기 (Define the MNIST Network)
 
-Specifically, we will write a caffe::NetParameter (or in python, caffe.proto.caffe_pb2.NetParameter) protobuf. We will start by giving the network a name:
+이 단원은 MNIST 손으로 쓴 숫자 분류를 위한 LeNet 모델을 정의한 `lenet_train_test.prototxt`에 있는 모델 정의를 설명합니다. 여러분이 구글 프로토버프에 익숙하다고 가정하며, `$CAFFE_ROOT/src/caffe/proto/caffe.proto`에 적혀있는 카페에서 사용하는 프로토버프에 대한 정의를 읽어 보았다고 가정합니다.
+(This section explains the `lenet_train_test.prototxt` model definition that specifies the LeNet model for MNIST handwritten digit classification. We assume that you are familiar with Google Protobuf, and assume that you have read the protobuf definitions used by Caffe, which can be found at `$CAFFE_ROOT/src/caffe/proto/caffe.proto`.)
+
+자세히 말하자면, 우리는 `caffe::NetParameter` (혹은 파이썬에서라면 `caffe.proto.caffe_pb2.NetParameter`) 프로토버프를 작성할 것입니다. 먼저 신경망에 이름을 붙이는 데에서부터 시작합니다.
+(Specifically, we will write a `caffe::NetParameter` (or in python, `caffe.proto.caffe_pb2.NetParameter`) protobuf. We will start by giving the network a name:)
 
     name: "LeNet"
-###Writing the Data Layer
+    
+### 데이터 레이어 작성 (Writing the Data Layer)
 
-Currently, we will read the MNIST data from the lmdb we created earlier in the demo. This is defined by a data layer:
+지금 우리는 이 예제의 앞 부분에서 우리가 만든 lmdb에서 MNIST 데이터를 불러 올 것입니다. 이 작업은 데이터 레이어에 정의되어 있습니다.
+(Currently, we will read the MNIST data from the lmdb we created earlier in the demo. This is defined by a data layer:)
 
     layer {
       name: "mnist"
@@ -47,7 +52,8 @@ Currently, we will read the MNIST data from the lmdb we created earlier in the d
       top: "data"
       top: "label"
     }
-Specifically, this layer has name mnist, type data, and it reads the data from the given lmdb source. We will use a batch size of 64, and scale the incoming pixels so that they are in the range [0,1). Why 0.00390625? It is 1 divided by 256. And finally, this layer produces two blobs, one is the data blob, and one is the label blob.
+    
+(Specifically, this layer has name `mnist`, type `data`, and it reads the data from the given lmdb source. We will use a batch size of 64, and scale the incoming pixels so that they are in the range [0,1). Why 0.00390625? It is 1 divided by 256. And finally, this layer produces two blobs, one is the `data` blob, and one is the `label` blob.)
 
 ###Writing the Convolution Layer
 
