@@ -202,57 +202,80 @@ LeNet의 설계는 이미지넷 등에 적용되는 더 큰 신경망에서도 �
 레이어가 신경망에 포함될 것인지에 대한 이 규칙은 신경망의 현재 상태에 기반합니다. `$CAFFE_ROOT/src/caffe/proto/caffe.proto`에서 레이어 규칙과 모델 스키마에 대한 더 많은 정보를 찾을 수 있습니다.
 (This is a rule, which controls layer inclusion in the network, based on current network’s state. You can refer to `$CAFFE_ROOT/src/caffe/proto/caffe.proto` for more information about layer rules and model schema.)
 
+위의 예제 레이어는 학습(`TRAIN`) 단계에서만 사용됩니다. 만약 `TRAIN`을 `TEST`로 바꾸면 이 레이어는 평가 단계에서만 사용되게 됩니다. 기본적으로 레이어 규칙이 없을 경우 레이어는 모든 신경망에 다 사용되게 됩니다. 따라서 `lenet_train_test.prototxt`는 두 개의 (`batch_size`가 서로 다른) `DATA` 레이어를 가지고 있으며, 하나는 학습 단계, 다른 하나는 검증 단계에 사용됩니다. 또한 `lenet_solver.prototxt`에 정의된 대로, `TEST` 단계에만 있는 `Accuracy` 레이어는 100번의 반복마다 모델의 정확도를 보고하는 역할을 합니다.
 (In the above example, this layer will be included only in `TRAIN` phase. If we change `TRAIN` with `TEST`, then this layer will be used only in test phase. By default, that is without layer rules, a layer is always included in the network. Thus, `lenet_train_test.prototxt` has two `DATA` layers defined (with different `batch_size`), one for the training phase and one for the testing phase. Also, there is an `Accuracy` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.)
 
-## Define the MNIST Solver
-Check out the comments explaining each line in the prototxt $CAFFE_ROOT/examples/mnist/lenet_solver.prototxt:
+## MNIST 연산기 만들기 (Define the MNIST Solver)
 
+prototxt 파일 `$CAFFE_ROOT/examples/mnist/lenet_solver.prototxt`의 각 줄을 설명하는 주석을 잘 보세요.
+(Check out the comments explaining each line in the prototxt `$CAFFE_ROOT/examples/mnist/lenet_solver.prototxt`:)
+
+    # 학습/검증 신경망 프로토콜 버퍼 정의
     # The train/test net protocol buffer definition
     net: "examples/mnist/lenet_train_test.prototxt"
+    # test_iter는 검증할 때 몇 번의 전진 단계를 거칠지를 정합니다.
+    # MNIST의 경우 검증 묶음 단위를 100으로 하고 검증을 100번 반복해서,
+    # 전체 10000개의 이미지를 포괄합니다.
     # test_iter specifies how many forward passes the test should carry out.
     # In the case of MNIST, we have test batch size 100 and 100 test iterations,
     # covering the full 10,000 testing images.
     test_iter: 100
+    # 학습 500번 반복마다 한 번씩 검증을 합니다.
     # Carry out testing every 500 training iterations.
     test_interval: 500
+    # 신경망의 기본 학습률, 관성(momentum), 가중치 붕괴를 설정합니다.
     # The base learning rate, momentum and the weight decay of the network.
     base_lr: 0.01
     momentum: 0.9
     weight_decay: 0.0005
+    # 학습률 원칙
     # The learning rate policy
     lr_policy: "inv"
     gamma: 0.0001
     power: 0.75
+    # 100번의 반복마다 화면에 표시합니다.
     # Display every 100 iterations
     display: 100
+    # 최대 반복 회수
     # The maximum number of iterations
     max_iter: 10000
+    # 중간 결과 기록
     # snapshot intermediate results
     snapshot: 5000
     snapshot_prefix: "examples/mnist/lenet"
+    # 연산기 방식: CPU 혹은 GPU
     # solver mode: CPU or GPU
     solver_mode: GPU
 
-## Training and Testing the Model
-Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run train_lenet.sh, or the following command directly:
+## 모델 학습시키고 검증하기 (Training and Testing the Model)
+
+모델 학습은 신경망 정의와 연산기 프로토버프 파일만 작성하면 간단히 끝납니다. 간단히 `train_lenet.sh`를 실행하거나 다음 명령어를 직접 입력하세요.
+(Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run `train_lenet.sh`, or the following command directly:)
 
     cd $CAFFE_ROOT
     ./examples/mnist/train_lenet.sh
-train_lenet.sh is a simple script, but here is a quick explanation: the main tool for training is caffe with action train and the solver protobuf text file as its argument.
 
-When you run the code, you will see a lot of messages flying by like this:
+`train_lenet.sh` 는 단순한 스크립트이지만 간단히 설명하겠습니다. 학습에 사용되는 도구는 `caffe`이고 연산기 프로토버프 문서 파일을 인자로 받아서 `train` 작업을 합니다.
+(`train_lenet.sh` is a simple script, but here is a quick explanation: the main tool for training is `caffe` with action `train` and the solver protobuf text file as its argument.)
+
+위의 코드를 실행하면 아래와 같이 엄청난 알림이 날라다니는 것을 볼 수 있습니다 ^^
+(When you run the code, you will see a lot of messages flying by like this:))
 
     I1203 net.cpp:66] Creating Layer conv1
     I1203 net.cpp:76] conv1 <- data
     I1203 net.cpp:101] conv1 -> conv1
     I1203 net.cpp:116] Top shape: 20 24 24
     I1203 net.cpp:127] conv1 needs backward computation.
-These messages tell you the details about each layer, its connections and its output shape, which may be helpful in debugging. After the initialization, the training will start:
+
+이 알림들은 각 레이어의 세부 사항, 연결, 출력의 모양에 대한 것이며 디버깅할 때에 유용할 수 있습니다. 초기화 후에 학습이 시작됩니다.
+(These messages tell you the details about each layer, its connections and its output shape, which may be helpful in debugging. After the initialization, the training will start:)
 
     I1203 net.cpp:142] Network initialization done.
     I1203 solver.cpp:36] Solver scaffolding done.
     I1203 solver.cpp:44] Solving LeNet
-Based on the solver setting, we will print the training loss function every 100 iterations, and test the network every 500 iterations. You will see messages like this:
+
+연산기 설정에 따라 학습 손실 함수를 100회 반복시마다 출력하고 신경망을 500회 반복시마다 검증합니다. 이런 알림을 보게 됩니다 ^^
+(Based on the solver setting, we will print the training loss function every 100 iterations, and test the network every 500 iterations. You will see messages like this:))
 
     I1203 solver.cpp:204] Iteration 100, lr = 0.00992565
     I1203 solver.cpp:66] Iteration 100, loss = 0.26044
@@ -260,9 +283,12 @@ Based on the solver setting, we will print the training loss function every 100 
     I1203 solver.cpp:84] Testing net
     I1203 solver.cpp:111] Test score #0: 0.9785
     I1203 solver.cpp:111] Test score #1: 0.0606671
-For each training iteration, lr is the learning rate of that iteration, and loss is the training function. For the output of the testing phase, score 0 is the accuracy, and score 1 is the testing loss function.
 
-And after a few minutes, you are done!
+학습 반복 매 회에 대해 `lr`은 그 반복에서의 학습률이고 `loss`는 학습 함수입니다. (번역자 의견: 학습 함수가 아니라 학습 손실 함수인데 잘못 쓴 것 같습니다.) 검증 단계의 출력의 경우 score 0은 정확도이고 score 1은  검증 손실 함수입니다.
+(For each training iteration, `lr` is the learning rate of that iteration, and `loss` is the training function. For the output of the testing phase, score 0 is the accuracy, and score 1 is the testing loss function.)
+
+그리고 몇 분 후면, 끝납니다!
+(And after a few minutes, you are done!)
 
     I1203 solver.cpp:84] Testing net
     I1203 solver.cpp:111] Test score #0: 0.9897
@@ -270,21 +296,31 @@ And after a few minutes, you are done!
     I1203 solver.cpp:126] Snapshotting to lenet_iter_10000
     I1203 solver.cpp:133] Snapshotting solver state to lenet_iter_10000.solverstate
     I1203 solver.cpp:78] Optimization Done.
-The final model, stored as a binary protobuf file, is stored at
+
+이진 프로토버프 파일로 저장되는 최종 모델의 이름은
+(The final model, stored as a binary protobuf file, is stored at)
 
     lenet_iter_10000
-which you can deploy as a trained model in your application, if you are training on a real-world application dataset.
 
-### Um… How about GPU training?
+이며, 현실에 적용 가능한 데이터셋으로 학습된 경우 학습된 모델로써 당신의 응용 프로그램에서 사용될 수 있습니다.
+(which you can deploy as a trained model in your application, if you are training on a real-world application dataset.)
 
-You just did! All the training was carried out on the GPU. In fact, if you would like to do training on CPU, you can simply change one line in lenet_solver.prototxt:
+### 어... GPU를 사용한 학습은요? (Um... How about GPU training?)
 
+이미 여러분이 했습니다! 모든 학습은 GPU에서 돌아갑니다. 사실, 만약 CPU에서 학습을 시키고 싶으면 `lenet_solver.prototxt`에서 그저 한 줄만 바꾸면 됩니다.
+(You just did! All the training was carried out on the GPU. In fact, if you would like to do training on CPU, you can simply change one line in `lenet_solver.prototxt`:)
+
+    # 연산기 방식: CPU 혹은 GPU
     # solver mode: CPU or GPU
     solver_mode: CPU
-and you will be using CPU for training. Isn’t that easy?
 
-MNIST is a small dataset, so training with GPU does not really introduce too much benefit due to communication overheads. On larger datasets with more complex models, such as ImageNet, the computation speed difference will be more significant.
+그러면 학습에 CPU를 사용합니다. 참 쉽지요?
+(and you will be using CPU for training. Isn’t that easy?)
 
-### How to reduce the learning rate at fixed steps?
+MNIST는 작은 데이터셋이기 때문에, 통신 부하 때문에 GPU에서 학습시키는 것이 그렇게 큰 장점이 되지 않습니다. 이미지넷(ImageNet)과 같이 더 큰 데이터셋과 더 복잡한 모델을 사용할 경우 계산 속도 차이가 더욱 확실할 것입니다.
+(MNIST is a small dataset, so training with GPU does not really introduce too much benefit due to communication overheads. On larger datasets with more complex models, such as ImageNet, the computation speed difference will be more significant.)
 
-Look at lenet_multistep_solver.prototxt
+### 어떻게 하면 고정된 반복마다 학습률을 감소시킬 수 있나요? (How to reduce the learning rate at fixed steps?)
+
+`lenet_multistep_solver.prototxt`를 보세요.
+(Look at lenet_multistep_solver.prototxt)
