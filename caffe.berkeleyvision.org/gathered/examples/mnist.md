@@ -139,9 +139,10 @@ LeNet의 설계는 이미지넷 등에 적용되는 더 큰 신경망에서도 �
 500개의 출력을 만드는 모두 연결된 레이어(카페에서는 `내적`(`InnerProduct`) 레이어라고 부릅니다)입니다. 다른 내용은 다 눈에 익지요?
 (This defines a fully connected layer (known in Caffe as an `InnerProduct` layer) with 500 outputs. All other lines look familiar, right?)
 
-### Writing the ReLU Layer
+### 정류된 선형 단위(ReLU) 레이어 만들기 (Writing the ReLU Layer)
 
-A ReLU Layer is also simple:
+정류된 선형 단위(정선단, ReLU) 레이어를 만드는 것도 쉽습니다.
+(A ReLU Layer is also simple:)
 
     layer {
       name: "relu1"
@@ -149,9 +150,12 @@ A ReLU Layer is also simple:
       bottom: "ip1"
       top: "ip1"
     }
-Since ReLU is an element-wise operation, we can do in-place operations to save some memory. This is achieved by simply giving the same name to the bottom and top blobs. Of course, do NOT use duplicated blob names for other layer types!
 
-After the ReLU layer, we will write another innerproduct layer:
+정선단은 원소에 대한 연산이기 때문에 추가 변수를 사용하지 않음으로써 메모리를 절약할 수 있습니다. 단순히 아래와 위 블롭 이름을 똑같이 해 주는 것만으로 가능합니다. 물론 다른 레이어 종류에서는 블롭 이름을 중복해서 쓰면 안 됩니다!
+(Since ReLU is an element-wise operation, we can do _in-place_ operations to save some memory. This is achieved by simply giving the same name to the bottom and top blobs. Of course, do NOT use duplicated blob names for other layer types!)
+
+정선단 레이어 다음에는 또다른 모두 연결된 레이어를 만듭니다 ^^
+(After the ReLU layer, we will write another innerproduct layer:))
 
     layer {
       name: "ip2"
@@ -170,9 +174,11 @@ After the ReLU layer, we will write another innerproduct layer:
       bottom: "ip1"
       top: "ip2"
     }
-### Writing the Loss Layer
 
-Finally, we will write the loss!
+### 손실 레이어 만들기 (Writing the Loss Layer)
+
+드디어 손실을 계산합니다!
+(Finally, we will write the loss!)
 
     layer {
       name: "loss"
@@ -180,19 +186,23 @@ Finally, we will write the loss!
       bottom: "ip2"
       bottom: "label"
     }
-The softmax_loss layer implements both the softmax and the multinomial logistic loss (that saves time and improves numerical stability). It takes two blobs, the first one being the prediction and the second one being the label provided by the data layer (remember it?). It does not produce any outputs - all it does is to compute the loss function value, report it when backpropagation starts, and initiates the gradient with respect to ip2. This is where all magic starts.
 
-### Additional Notes: Writing Layer Rules
+소프트맥스 손실(`softmax_loss`) 레이어는 (시간을 절약하고 계산의 안정성을 향상시키도록) 소프트맥스와 다변수 로지스틱 손실 모두를 구현하고 있습니다. 두 개의 블롭, 예측값과 데이터 레이어(기억나죠?)로부터 나온 라벨(`label`)이 사용됩니다. 출력을 따로 만들지는 않습니다. 이 레이어가 하는 일은 `ip2`에 대해서 손실 함수를 계산해서 역전파가 시작될 때에 그 값을 보고하고 경사 하강법을 개시하는 것입니다. 여기가 모든 마법이 시작되는 지점입니다.
+(The `softmax_loss` layer implements both the softmax and the multinomial logistic loss (that saves time and improves numerical stability). It takes two blobs, the first one being the prediction and the second one being the `label` provided by the data layer (remember it?). It does not produce any outputs - all it does is to compute the loss function value, report it when backpropagation starts, and initiates the gradient with respect to `ip2`. This is where all magic starts.)
 
-Layer definitions can include rules for whether and when they are included in the network definition, like the one below:
+### 추가: 레이어 작성 법칙 (Additional Notes: Writing Layer Rules)
+아래와 같이, 레이어 정의는 레이어가 신경망 정의에 포함될 것인지, 포함된다면 언제 포함될 것인지에 대한 규칙을 포함할 수 있습니다.
+(Layer definitions can include rules for whether and when they are included in the network definition, like the one below:)
 
     layer {
       // ...layer definition...
       include: { phase: TRAIN }
     }
-This is a rule, which controls layer inclusion in the network, based on current network’s state. You can refer to $CAFFE_ROOT/src/caffe/proto/caffe.proto for more information about layer rules and model schema.
 
-In the above example, this layer will be included only in TRAIN phase. If we change TRAIN with TEST, then this layer will be used only in test phase. By default, that is without layer rules, a layer is always included in the network. Thus, lenet_train_test.prototxt has two DATA layers defined (with different batch_size), one for the training phase and one for the testing phase. Also, there is an Accuracy layer which is included only in TEST phase for reporting the model accuracy every 100 iteration, as defined in lenet_solver.prototxt.
+레이어가 신경망에 포함될 것인지에 대한 이 규칙은 신경망의 현재 상태에 기반합니다. `$CAFFE_ROOT/src/caffe/proto/caffe.proto`에서 레이어 규칙과 모델 스키마에 대한 더 많은 정보를 찾을 수 있습니다.
+(This is a rule, which controls layer inclusion in the network, based on current network’s state. You can refer to `$CAFFE_ROOT/src/caffe/proto/caffe.proto` for more information about layer rules and model schema.)
+
+(In the above example, this layer will be included only in `TRAIN` phase. If we change `TRAIN` with `TEST`, then this layer will be used only in test phase. By default, that is without layer rules, a layer is always included in the network. Thus, `lenet_train_test.prototxt` has two `DATA` layers defined (with different `batch_size`), one for the training phase and one for the testing phase. Also, there is an `Accuracy` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.)
 
 ## Define the MNIST Solver
 Check out the comments explaining each line in the prototxt $CAFFE_ROOT/examples/mnist/lenet_solver.prototxt:
