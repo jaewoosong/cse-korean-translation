@@ -6,6 +6,8 @@
 ## 현재 번역중인 문서 (Currently translating)
 
 ### 카페 (Caffe)
+* 카페 (기계 학습) 한국어 번역
+* Caffe (machine learning) Korean translation
 * http://caffe.berkeleyvision.org/
 * @article{jia2014caffe,
   Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
