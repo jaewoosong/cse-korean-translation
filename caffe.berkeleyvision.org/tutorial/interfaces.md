@@ -47,29 +47,39 @@
     # model architeture lenet_train_test.prototxt
     caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
 
-**Benchmarking**: `caffe time` benchmarks model execution layer-by-layer through timing and synchronization. This is useful to check system performance and measure relative execution times for models.
+**성능 비교**: `caffe time`은 각 레이어에 대한 모델 실행 성능을 시간과 동기화에 대해 비교합니다. 기기의 성능과 모델 별 상대적 실행 시간을 측정할 때에 유용합니다.
+(**Benchmarking**: `caffe time` benchmarks model execution layer-by-layer through timing and synchronization. This is useful to check system performance and measure relative execution times for models.)
 
+    # (이 예제를 실행하기 위해서는 LeNet / MNIST 예제를 먼저 끝내야 합니다.)
     # (These example calls require you complete the LeNet / MNIST example first.)
+    # LeNet을 CPU를 사용하여 10회 반복 학습하는 데에 걸리는 시간
     # time LeNet training on CPU for 10 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -iterations 10
+    # LeNet을 GPU를 사용하여 기본인 50회 반복 학습하는 데에 걸리는 시간
     # time LeNet training on GPU for the default 50 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -gpu 0
+    # 주어진 모델 설정과 가중치로 첫 번째 GPU를 사용하여 10회 반복 학습하는 데에 걸리는 시간
     # time a model architecture with the given weights on the first GPU for 10 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 10
 
-**Diagnostics**: `caffe device_query` reports GPU details for reference and checking device ordinals for running on a given device in multi-GPU machines.
+**진단**: `caffe device_query`는 참조를 위해 GPU 세부 사항을 보고하며 GPU가 여러 대 있을 경우 특정 기기를 사용하기 위해 기기의 번호를 검사합니다.
+(**Diagnostics**: `caffe device_query` reports GPU details for reference and checking device ordinals for running on a given device in multi-GPU machines.)
 
+    # 첫 번째 기기 접촉
     # query the first device
     caffe device_query -gpu 0
 
-**Parallelism**: the `-gpu` flag to the `caffe` tool can take a comma separated list of IDs to run on multiple GPUs. A solver and net will be instantiated for each GPU so the batch size is effectively multiplied by the number of GPUs. To reproduce single GPU training, reduce the batch size in the network definition accordingly.
+**병렬화**: `caffe` 도구의 `-gpu` 신호는 여러 개의 GPU를 사용하기 위해 쉼표로 분리된 명단을 받을 수 있습니다. 연산기와 신경망이 각각의 GPU에 대해 실행되고, 일괄 처리 크기는 GPU 개수에 대해 효과적으로 곱해집니다. 단일 GPU 학습을 재현하고 싶으면 신경망 정의의 일괄 처리 크기 부분을 알맞게 줄이세요.
+(**Parallelism**: the `-gpu` flag to the `caffe` tool can take a comma separated list of IDs to run on multiple GPUs. A solver and net will be instantiated for each GPU so the batch size is effectively multiplied by the number of GPUs. To reproduce single GPU training, reduce the batch size in the network definition accordingly.)
 
+    # GPU 0번과 1번에서 학습 (일괄 처리 크기 두 배로 늘림)
     # train on GPUs 0 & 1 (doubling the batch size)
     caffe train -solver examples/mnist/lenet_solver.prototxt -gpu 0,1
+    # 모든 GPU에서 학습 (일괄 처리 크기레 기기 개수를 곱함)
     # train on all GPUs (multiplying batch size by number of devices)
     caffe train -solver examples/mnist/lenet_solver.prototxt -gpu all
 
-## Python
+## 파이썬 (Python)
 
 The Python interface -- pycaffe -- is the `caffe` module and its scripts in caffe/python. `import caffe` to load models, do forward and backward, handle IO, visualize networks, and even instrument model solving. All model data, derivatives, and parameters are exposed for reading and writing.
 
