@@ -5,30 +5,44 @@
 
 ## 명령줄 (Command Line)
 
+명령줄 인터페이스 -- cmdcaffe -- 는 모델 학습, 평가, 진단을 위한 `caffe` 도구입니다. 도움말을 보려면 아무런 인자 없이 `caffe`를 실행하세요. 이것 및 다른 도구는 caffe/build/tools에서 찾을 수 있습니다. (이하 예제는 Lenet / MNIST 예제를 먼저 끝냈어야 동작합니다.)
 (The command line interface -- cmdcaffe -- is the `caffe` tool for model training, scoring, and diagnostics. Run `caffe` without any arguments for help. This tool and others are found in caffe/build/tools. (The following example calls require completing the LeNet / MNIST example first.))
 
-**Training**: `caffe train` learns models from scratch, resumes learning from saved snapshots, and fine-tunes models to new data and tasks:
+**학습**: `caffe train`은 모델을 맨 처음부터 학습할 때, 저장된 중간 단계 모델로부터 학습을 재개할 때, 새로운 데이터와 작업에 대해 모델을 세부 조정할 때 사용됩니다.
+(**Training**: `caffe train` learns models from scratch, resumes learning from saved snapshots, and fine-tunes models to new data and tasks:)
 
-* All training requires a solver configuration through the `-solver solver.prototxt` argument.
-* Resuming requires the `-snapshot model_iter_1000.solverstate` argument to load the solver snapshot.
-* Fine-tuning requires the `-weights model.caffemodel` argument for the model initialization.
+* 모든 학습은 `-solver solver.prototxt` 인자를 통한 연산기 설정을 필요로 합니다.
+(All training requires a solver configuration through the `-solver solver.prototxt` argument.)
+* 학습 재개를 하려면 `-snapshot model_iter_1000.solverstate` 인자를 통해 연산기 중간 단계를 불러와야 합니다.
+(Resuming requires the `-snapshot model_iter_1000.solverstate` argument to load the solver snapshot.)
+* 모델 세부 조정에는 모델 초기화를 위해 `-weights model.caffemodel` 인자가 필요합니다.
+(Fine-tuning requires the `-weights model.caffemodel` argument for the model initialization.)
 
-For example, you can run:
+예를 들어, 다음과 같이 실행할 수 있습니다.
+(For example, you can run:)
 
+    # LeNet 학습
     # train LeNet
     caffe train -solver examples/mnist/lenet_solver.prototxt
+    # 2번 GPU에서 학습
     # train on GPU 2
     caffe train -solver examples/mnist/lenet_solver.prototxt -gpu 2
+    # 중간 단계 모델에서 학습 재개
     # resume training from the half-way point snapshot
     caffe train -solver examples/mnist/lenet_solver.prototxt -snapshot examples/mnist/lenet_iter_5000.solverstate
 
-For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but the training call alone is
+세부 조정에 대한 전체 예제는 examples/finetuning\_on\_flickr\_style에 있고, 학습 실행 자체는 다음과 같습니다.
+(For a full example of fine-tuning, see examples/finetuning\_on\_flickr\_style, but the training call alone is)
 
+    # 스타일 인식을 위한 CaffeNet 모델 가중치 세부 조정
     # fine-tune CaffeNet model weights for style recognition
     caffe train -solver examples/finetuning_on_flickr_style/solver.prototxt -weights models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel
 
-**Testing**: `caffe test` scores models by running them in the test phase and reports the net output as its score. The net architecture must be properly defined to output an accuracy measure or loss as its output. The per-batch score is reported and then the grand average is reported last.
+**검사**: `caffe test`는 모델을 검사 단계에서 실행한 뒤 신경망의 출력을 점수로 기록합니다. 신경망은 정확성 혹은 손실 값을 출력하도록 제대로 설계되어야 합니다. 한 번의 일괄 처리마다의 점수가 보고되고, 최종 평균이 마지막에 보고됩니다.
+(**Testing**: `caffe test` scores models by running them in the test phase and reports the net output as its score. The net architecture must be properly defined to output an accuracy measure or loss as its output. The per-batch score is reported and then the grand average is reported last.)
 
+    # lenet_train_test.prototxt에 기록된 모델 설계대로
+    # 학습된 LeNet 모델을 확인(validation) 데이터에 대해 채점합니다.
     # score the learned LeNet model on the validation set as defined in the
     # model architeture lenet_train_test.prototxt
     caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
