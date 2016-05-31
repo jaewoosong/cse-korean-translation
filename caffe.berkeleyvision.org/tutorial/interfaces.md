@@ -75,7 +75,7 @@
     # GPU 0번과 1번에서 학습 (일괄 처리 크기 두 배로 늘림)
     # train on GPUs 0 & 1 (doubling the batch size)
     caffe train -solver examples/mnist/lenet_solver.prototxt -gpu 0,1
-    # 모든 GPU에서 학습 (일괄 처리 크기레 기기 개수를 곱함)
+    # 모든 GPU에서 학습 (일괄 처리 크기에 기기 개수를 곱함)
     # train on all GPUs (multiplying batch size by number of devices)
     caffe train -solver examples/mnist/lenet_solver.prototxt -gpu all
 
