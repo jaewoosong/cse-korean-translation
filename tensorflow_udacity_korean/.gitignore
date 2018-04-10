@@ -1,0 +1,6 @@
+.ipynb_checkpoints
+*.swp
+*.*~
+notMNIST_large*
+notMNIST_small*
+*.pickle
